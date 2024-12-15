@@ -253,11 +253,13 @@ Move parseMove(const char *moveStr, ChessBoard *cb) {
 }
 
 // Converts a Move object to a move string (e.g., "e2e4")
-void moveToString(Move move, char *moveStr) {
+char *moveToString(Move move) {
+    static char moveStr[5];
     // Convert from 0-63 square index to algebraic notation
     moveStr[0] = 'a' + (move.from % 8); // File of "from" square
     moveStr[1] = '8' - (move.from / 8); // Rank of "from" square
     moveStr[2] = 'a' + (move.to % 8);   // File of "to" square
     moveStr[3] = '8' - (move.to / 8);   // Rank of "to" square
     moveStr[4] = '\0';                  // Null terminator for the string
+    return moveStr;
 }

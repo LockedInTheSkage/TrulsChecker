@@ -2,51 +2,46 @@
 #include "LookupTable.h"
 #include "ChessBoard.h"
 #include "Branch.h"
+#include "Heuristic.h"
+#include "Minimax.h"
 
 #include <stdio.h>
 #include <limits.h>
 #include <stdbool.h>
 #include <time.h>
 
-#define BOARD_SIZE 64
-#define PIECE_SIZE 12 // Including empty pieces
-#define MAX_DEPTH 10 // Arbitrary large number for max depth
-#define TIME_LIMIT 2000 // in milliseconds
 
-int evaluate(ChessBoard *board) {
-    // Simple material-based heuristic
-    int score = 0;
-    for (int i = 0; i < PIECE_SIZE; i++) {
-        if (board->pieces[i] > 0) {
-            score += 1; // Example, increment for each piece type
-        } else if (board->pieces[i] < 0) {
-            score -= 1;
-        }
-    }
-    return score;
-}
 
-int minimax(ChessBoard *board, int depth, int alpha, int beta, bool maximizingPlayer, clock_t startTime, int timeLimit) {
+
+int minimax(LookupTable l, ChessBoard *oldBoard, int alpha, int beta, bool maximizingPlayer, clock_t startTime, int timeLimit) {
     // Check for time out
     if (((clock() - startTime) / CLOCKS_PER_SEC) * 1000 >= timeLimit) {
         return INT_MIN; // Indicate timeout
     }
+    //printf("Copying board\n");
+    // Create a copy of the oldBoard
+    ChessBoard boardCopy = *oldBoard;
+    ChessBoard *board = &boardCopy;
 
-    if (depth == 0) {
-        return evaluate(board);
+    //printf("Depth: %d\n", board->depth);
+
+    if (board->depth == 0) {
+        //printf("Reached depth 0\n");
+        return heuristic(board);
     }
 
-    Branch b;
-    BranchFill(NULL, board, &b); // Fill branches with moves
+    Branch branches[BRANCHES_SIZE];
+    int branchesSize = BranchFill(l, board, branches);
+    Move moves[MOVES_SIZE];
+    int movesSize = BranchExtract(branches, branchesSize, moves);
 
     if (maximizingPlayer) {
         int maxEval = INT_MIN;
-        for (int i = 0; i < PIECE_SIZE; i++) {
-            Move move = {0}; // Dummy move
-            // Apply move
+        for (int i = 0; i < movesSize; i++) {
+            Move move = moves[i];
             ChessBoard newBoard;
             ChessBoardPlayMove(&newBoard, board, move);
-            int eval = minimax(&newBoard, depth - 1, alpha, beta, false, startTime, timeLimit);
+            int eval = minimax(l, &newBoard, alpha, beta, false, startTime, timeLimit);
             maxEval = (eval > maxEval) ? eval : maxEval;
             alpha = (alpha > eval) ? alpha : eval;
             if (beta <= alpha) break; // Alpha-beta pruning
@@ -59,7 +54,8 @@ int minimax(ChessBoard *board, int depth, int alpha, int beta, bool maximizingPl
             // Apply move
             ChessBoard newBoard;
             ChessBoardPlayMove(&newBoard, board, move);
-            int eval = minimax(&newBoard, depth - 1, alpha, beta, true, startTime, timeLimit);
+            
+            int eval = minimax(l, &newBoard, alpha, beta, true, startTime, timeLimit);
             minEval = (eval < minEval) ? eval : minEval;
             beta = (beta < eval) ? beta : eval;
             if (beta <= alpha) break; // Alpha-beta pruning
@@ -68,21 +64,41 @@ int minimax(ChessBoard *board, int depth, int alpha, int beta, bool maximizingPl
     }
 }
 
-Move bestMove(ChessBoard *board, int depth, int timeLimit) {
+Move bestMove(LookupTable l, ChessBoard *boardPtr, int maxDepth, int timeLimit) {
+    
     clock_t startTime = clock();
     int bestVal = INT_MIN;
     Move bestMove;
-    Branch b;
-    BranchFill(NULL, board, &b);
+    
+    Branch branches[BRANCHES_SIZE];
+    int branchesSize = BranchFill(l, boardPtr, branches);
+    Move moves[MOVES_SIZE];
+    int movesSize = BranchExtract(branches, branchesSize, moves);
+    //printf("Moves size: %d\n", movesSize);
+    //printf("Looking for good moves| Time limit: %d ms\n", timeLimit);
+    
+    // Increase depth of board
+    
 
-    for (int i = 0; i < PIECE_SIZE; i++) {
-        Move move = {0}; // Dummy move
-        ChessBoard newBoard;
-        ChessBoardPlayMove(&newBoard, board, move);
-        int moveVal = minimax(&newBoard, depth - 1, INT_MIN, INT_MAX, false, startTime, timeLimit);
-        if (moveVal > bestVal) {
-            bestMove = move;
-            bestVal = moveVal;
+
+    while (
+        ((clock() - startTime) / CLOCKS_PER_SEC) * 1000 <= timeLimit
+        && (maxDepth == -1 || boardPtr->depth < maxDepth)    
+            ){
+        //printf("In while loop\n");
+        for (int i = 0; i < movesSize; i++) {
+            //printf("Creating new board\n");
+            Move move = moves[i];
+            //printf("Creating new board\n");
+            ChessBoard newBoard;
+            //printf("Playing move\n");
+            ChessBoardPlayMove(&newBoard, boardPtr, move);
+            //printf("Minimaxing\n");
+            int moveVal = minimax(l, &newBoard, INT_MIN, INT_MAX, false, startTime, timeLimit);
+            if (moveVal > bestVal) {
+                bestMove = move;
+                bestVal = moveVal;
+            }
         }
     }
 

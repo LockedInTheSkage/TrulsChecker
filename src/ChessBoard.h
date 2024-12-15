@@ -103,6 +103,6 @@ BitBoard ChessBoardAttacked(LookupTable l, ChessBoard *cb);
 
 Move parseMove(const char *moveStr, ChessBoard *cb);
 
-void moveToString(Move move, char *moveStr);
+char *moveToString(Move move);
 
 #endif

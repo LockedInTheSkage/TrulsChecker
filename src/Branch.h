@@ -5,7 +5,7 @@
 #include "LookupTable.h"
 #include "ChessBoard.h"
 
-#define BRANCHES_SIZE 20 // Assumes only regular chess positions will be given
+#define BRANCHES_SIZE 28 // Assumes only regular chess positions will be given
 
 /*
  * A branch represents a mapping between a set of from squares and a set

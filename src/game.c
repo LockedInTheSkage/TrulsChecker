@@ -2,31 +2,30 @@
 #include "LookupTable.h"
 #include "ChessBoard.h"
 #include "Branch.h"
+#include "Minimax.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-static long searchMove(LookupTable l, ChessBoard *cb, int base);
+#define TIME_LIMIT 2000 // in milliseconds
+
+static void runGame(ChessBoard *cbinit);
 
 int main(int argc  __attribute__((unused)), char **argv __attribute__((unused)))
 {
-
-    ChessBoard cb = ChessBoardNew("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", 3);
-    char moveStr[5] = {0};
-    ChessBoardPrintBoard(cb); // Print the board
-    
-    
-    runGame(&cb);
-    
+    ChessBoard cb = ChessBoardNew("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", 2);
+    runGame(&cb);   
 }
 
-static void runGame(ChessBoard *cb)
+static void runGame(ChessBoard *cbinit)
 {
-    ChessBoard cbinit = *cb;
+    ChessBoard *cb = cbinit;
+    LookupTable l = LookupTableNew();
     while (1)
     {
-        char moveStr[5] = {0};
         ChessBoardPrintBoard(*cb); // Print the board
+
+        char moveStr[5] = {0};
         printf("Enter a move: ");
         if (scanf("%4s", moveStr) != 1) {
             fprintf(stderr, "Error reading input\n");
@@ -43,46 +42,17 @@ static void runGame(ChessBoard *cb)
 
         Move playerMove = parseMove(moveStr, cb);
 
-        Move move = bestMove(&cb, depthLimit, timeLimit);
+        ChessBoard *new = malloc(sizeof(ChessBoard));
+        ChessBoardPlayMove(new, cb, playerMove);
+        cb = new;
+        ChessBoardPrintBoard(*cb); // Print the board
+      
+        Move aiMove = bestMove(l, cb, 2, TIME_LIMIT);
 
-        ChessBoard new;
-        ChessBoardPlayMove(&new, cb, playerMove);
-
-        ChessBoardPrintBoard(new); // Print the board
-        LookupTable l = LookupTableNew();
+        
+        ChessBoardPlayMove(new, cb, aiMove);
+        cb = new;
     }
     
     
-}
-
-static long searchMove(LookupTable l, ChessBoard *cb, int base)
-{
-  if (cb->depth == 0)
-    return 1;
-
-  Branch branches[BRANCHES_SIZE];
-  int branchesSize = BranchFill(l, cb, branches);
-
-  if ((cb->depth == 1) && (!base))
-    return BranchCount(branches, branchesSize);
-
-  long nodes = 0;
-  if (cb->depth == 2)
-    nodes += BranchPrune(l, cb, branches, branchesSize); // Note that this function is not implemented
-
-  ChessBoard new;
-  Move moves[MOVES_SIZE];
-
-  int movesSize = BranchExtract(branches, branchesSize, moves);
-  for (int i = 0; i < movesSize; i++)
-  {
-    Move m = moves[i];
-    ChessBoardPlayMove(&new, cb, m);
-    int subTree = searchMove(l, &new, 0);
-    if (base)
-      ChessBoardPrintMove(m, subTree);
-    nodes += subTree;
-  }
-
-  return nodes;
 }
