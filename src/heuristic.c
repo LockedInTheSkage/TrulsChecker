@@ -12,17 +12,18 @@
 int heuristic(ChessBoard *board) {
     int score = 0;
     for (int i = 0; i < BOARD_SIZE; i++) {
-        if (board->turn == White) {
-            score += pieceScore(board->squares[i]);
-        } else if (board->turn == Black) {
-            score -= pieceScore(board->squares[i]);
+        Piece p = board->squares[i];
+        if (GET_COLOR(p) == White) {
+            score += pieceScore(p);
+        } else{
+            score -= pieceScore(p);
         }
     }
     return score;
 }
 
 int pieceScore(Piece p) {
-    switch (p) {
+    switch (GET_TYPE(p)) {
         case Pawn:
             return 100;
         case Knight:

@@ -15,7 +15,7 @@
 
 int minimax(LookupTable l, ChessBoard *oldBoard, int alpha, int beta, bool maximizingPlayer, clock_t startTime, int timeLimit) {
     // Check for time out
-    if (((clock() - startTime) / CLOCKS_PER_SEC) * 1000 >= timeLimit) {
+    if (((clock() - startTime) * 1000)/ CLOCKS_PER_SEC >= timeLimit) {
         return INT_MIN; // Indicate timeout
     }
     //printf("Copying board\n");
@@ -56,6 +56,7 @@ int minimax(LookupTable l, ChessBoard *oldBoard, int alpha, int beta, bool maxim
             ChessBoardPlayMove(&newBoard, board, move);
             
             int eval = minimax(l, &newBoard, alpha, beta, true, startTime, timeLimit);
+            
             minEval = (eval < minEval) ? eval : minEval;
             beta = (beta < eval) ? beta : eval;
             if (beta <= alpha) break; // Alpha-beta pruning
@@ -74,7 +75,6 @@ Move bestMove(LookupTable l, ChessBoard *boardPtr, int maxDepth, int timeLimit) 
     int branchesSize = BranchFill(l, boardPtr, branches);
     Move moves[MOVES_SIZE];
     int movesSize = BranchExtract(branches, branchesSize, moves);
-    //printf("Moves size: %d\n", movesSize);
     //printf("Looking for good moves| Time limit: %d ms\n", timeLimit);
     
     // Increase depth of board
@@ -82,23 +82,21 @@ Move bestMove(LookupTable l, ChessBoard *boardPtr, int maxDepth, int timeLimit) 
 
 
     while (
-        ((clock() - startTime) / CLOCKS_PER_SEC) * 1000 <= timeLimit
+        (((clock() - startTime) * 1000)/ CLOCKS_PER_SEC) <= timeLimit
         && (maxDepth == -1 || boardPtr->depth < maxDepth)    
             ){
-        //printf("In while loop\n");
         for (int i = 0; i < movesSize; i++) {
-            //printf("Creating new board\n");
             Move move = moves[i];
-            //printf("Creating new board\n");
             ChessBoard newBoard;
-            //printf("Playing move\n");
+            newBoard.depth = boardPtr->depth + i;
             ChessBoardPlayMove(&newBoard, boardPtr, move);
-            //printf("Minimaxing\n");
-            int moveVal = minimax(l, &newBoard, INT_MIN, INT_MAX, false, startTime, timeLimit);
+
+            int moveVal = minimax(l, &newBoard, INT_MIN, INT_MAX, newBoard.turn, startTime, timeLimit);
             if (moveVal > bestVal) {
                 bestMove = move;
                 bestVal = moveVal;
             }
+            
         }
     }
 

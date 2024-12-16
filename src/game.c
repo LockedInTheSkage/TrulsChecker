@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define TIME_LIMIT 2000 // in milliseconds
+#define TIME_LIMIT 200000 // in milliseconds
 
 static void runGame(ChessBoard *cbinit);
 
@@ -47,7 +47,7 @@ static void runGame(ChessBoard *cbinit)
         cb = new;
         ChessBoardPrintBoard(*cb); // Print the board
       
-        Move aiMove = bestMove(l, cb, 2, TIME_LIMIT);
+        Move aiMove = bestMove(l, cb, 7, TIME_LIMIT);
 
         
         ChessBoardPlayMove(new, cb, aiMove);
