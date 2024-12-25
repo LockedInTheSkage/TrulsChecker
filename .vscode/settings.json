@@ -60,6 +60,10 @@
     "chessboard.h": "c",
     "lookuptable.h": "c",
     "stdbool.h": "c",
-    "branch.h": "c"
+    "branch.h": "c",
+    "random": "c",
+    "cmath": "c",
+    "*.tcc": "c",
+    "heuristic.h": "c"
   }
 }

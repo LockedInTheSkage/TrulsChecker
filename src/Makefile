@@ -16,7 +16,7 @@ DEPTH = 5
 # Targets
 .PHONY: all clean
 
-all: clean game
+all: clean game #perft test testHeuristic
 
 perft:
 	$(CC) $(CFLAGS0) -o perft perft.c BitBoard.c LookupTable.c ChessBoard.c Branch.c -lm
@@ -27,8 +27,11 @@ perft:
 test:
 	$(CC) $(CFLAGS2) -o test test.c BitBoard.c LookupTable.c ChessBoard.c Branch.c -lm
 
+testHeuristic:
+	$(CC) -o testHeuristic testHeuristic.c BitBoard.c LookupTable.c ChessBoard.c Branch.c Heuristic.c -lm -g
+
 game:
-	$(CC) $(CFLAGS2) -o game game.c BitBoard.c LookupTable.c ChessBoard.c Branch.c Minimax.c Heuristic.c -lm
+	$(CC) -o game game.c BitBoard.c LookupTable.c ChessBoard.c Branch.c Minimax.c Heuristic.c ChessBoardHelper.c -lm -g
 
 clean:
-	@rm -f perft test game *.gcda *.gcno
+	@rm -f perft test game testHeuristic *.gcda *.gcno

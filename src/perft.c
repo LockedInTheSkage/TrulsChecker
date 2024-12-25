@@ -10,7 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static long searchMove(LookupTable l, ChessBoard *cb, int base);
+static long treeSearch(LookupTable l, ChessBoard *cb, int base);
 
 int main(int argc, char **argv)
 {
@@ -23,12 +23,12 @@ int main(int argc, char **argv)
 
   ChessBoard cb = ChessBoardNew(argv[1], atoi(argv[2]));
   LookupTable l = LookupTableNew();
-  long nodes = searchMove(l, &cb, 1);
+  long nodes = treeSearch(l, &cb, 1);
   printf("\nNodes searched: %ld\n", nodes);
   LookupTableFree(l);
 }
 
-static long searchMove(LookupTable l, ChessBoard *cb, int base)
+static long treeSearch(LookupTable l, ChessBoard *cb, int base)
 {
   if (cb->depth == 0)
     return 1;
@@ -40,9 +40,6 @@ static long searchMove(LookupTable l, ChessBoard *cb, int base)
     return BranchCount(branches, branchesSize);
 
   long nodes = 0;
-  if (cb->depth == 2)
-    nodes += BranchPrune(l, cb, branches, branchesSize); // Note that this function is not implemented
-
   ChessBoard new;
   Move moves[MOVES_SIZE];
 
@@ -51,7 +48,7 @@ static long searchMove(LookupTable l, ChessBoard *cb, int base)
   {
     Move m = moves[i];
     ChessBoardPlayMove(&new, cb, m);
-    int subTree = searchMove(l, &new, 0);
+    int subTree = treeSearch(l, &new, 0);
     if (base)
       ChessBoardPrintMove(m, subTree);
     nodes += subTree;

@@ -5,7 +5,7 @@
 #include "LookupTable.h"
 #include "ChessBoard.h"
 
-#define BRANCHES_SIZE 28 // Assumes only regular chess positions will be given
+#define BRANCHES_SIZE 20 // Assumes only regular chess positions will be given
 
 /*
  * A branch represents a mapping between a set of from squares and a set
@@ -47,14 +47,5 @@ int BranchCount(Branch *b, int size);
  * of moves stored.
  */
 int BranchExtract(Branch *b, int size, Move *moves);
-
-/*
- * Given an array of branches for a given chess position, remove any moves from
- * each branch that satisfy the condition that we can know the number of legal
- * moves that would've resulted from playing this move. ie we can count the legal
- * number of moves two moves in advance. Return the total number of legal moves that
- * would've been found with regular traversal.
- */
-int BranchPrune(LookupTable l, ChessBoard *cb, Branch *curr, int currSize); // Not implemented
 
 #endif

@@ -9,16 +9,42 @@
 #include <time.h>
 #include <stdio.h>
 
-int heuristic(ChessBoard *board) {
+int heuristic(LookupTable l, ChessBoard *board) {
     int score = 0;
-    for (int i = 0; i < BOARD_SIZE; i++) {
-        Piece p = board->squares[i];
-        if (GET_COLOR(p) == White) {
-            score += pieceScore(p);
-        } else{
-            score -= pieceScore(p);
+
+    
+
+    for (int i = 0; i < PIECE_SIZE; i++) {
+        BitBoard pieces = board->pieces[i];
+        if (GET_TYPE(i) == King && BitBoardCountBits(pieces) == 0) {
+            if (GET_COLOR(i) == White) {
+                return INT_MAX;
+            } else {
+                return INT_MIN;
+            }
         }
+        score += BitBoardCountBits(pieces) * pieceScore(i) * (2*GET_COLOR(i)-1);
     }
+    
+    
+    Branch branches[BRANCHES_SIZE];
+    int branchesSize = BranchFill(l, board, branches);
+    board->turn = !board->turn;
+    Branch otherBranches[BRANCHES_SIZE];
+    int otherBranchesSize = BranchFill(l, board, otherBranches);
+    board->turn = !board->turn;
+
+    Move moves[MOVES_SIZE];
+    int movesSize = BranchExtract(branches, branchesSize, moves);
+    int otherMovesSize = BranchExtract(otherBranches, otherBranchesSize, moves);
+    if (board->turn == White) {
+        score += movesSize;
+        score -= otherMovesSize;
+    } else {
+        score -= movesSize;
+        score += otherMovesSize;
+    }
+
     return score;
 }
 
@@ -34,8 +60,6 @@ int pieceScore(Piece p) {
             return 500;
         case Queen:
             return 900;
-        case King:
-            return 10000;
         default:
             return 0;
     }

@@ -7,6 +7,22 @@
 #include "LookupTable.h"
 #include "ChessBoard.h"
 
+#define OUR(t) (cb->pieces[GET_PIECE(t, cb->turn)])                                     // Bitboard representing our pieces of type t
+#define THEIR(t) (cb->pieces[GET_PIECE(t, !cb->turn)])                                  // Bitboard representing their pieces of type t
+#define ALL (~cb->pieces[EMPTY_PIECE])                                                  // Bitboard of all the pieces
+#define US (OUR(Pawn) | OUR(Knight) | OUR(Bishop) | OUR(Rook) | OUR(Queen) | OUR(King)) // Bitboard of all our pieces
+#define THEM (ALL & ~US)                                                                // Bitboard of all their pieces
+
+#define GET_RANK(s) (SOUTH_EDGE >> (EDGE_SIZE * (EDGE_SIZE - BitBoardGetRank(s) - 1))) // BitBoard representing the rank of a specific square
+#define BACK_RANK(c) (BitBoard)((c == White) ? SOUTH_EDGE : NORTH_EDGE)                // BitBoard representing the back rank given a color
+
+// Masks used for castling
+#define KINGSIDE_CASTLING 0x9000000000000090
+#define QUEENSIDE_CASTLING 0x1100000000000011
+
+// Returns a bitboard representing a set of moves given a set of pawns and a color
+#define PAWN_ATTACKS(b, c) ((c == White) ? BitBoardShiftNW(b) | BitBoardShiftNE(b) : BitBoardShiftSW(b) | BitBoardShiftSE(b))
+
 static Color getColorFromASCII(char asciiColor);
 static char getASCIIFromPiece(Piece p);
 static Piece getPieceFromASCII(char asciiPiece);
@@ -17,6 +33,8 @@ ChessBoard ChessBoardNew(char *fen, int depth)
 {
   ChessBoard cb;
   memset(&cb, 0, sizeof(ChessBoard));
+  cb.moves_completed = 0;
+  memset(cb.movelist, 0, sizeof(Move) * MOVELIST_SIZE);
 
   // Parse pieces and squares
   for (Square s = 0; s < BOARD_SIZE && *fen; fen++)
@@ -112,6 +130,7 @@ void ChessBoardPlayMove(ChessBoard *new, ChessBoard *old, Move m)
   new->castling &= ~(BitBoardSetBit(EMPTY_BOARD, m.from) | BitBoardSetBit(EMPTY_BOARD, m.to));
   addPiece(new, m.to, m.moved);
   addPiece(new, m.from, EMPTY_PIECE);
+  new->movelist[new->moves_completed++] = m;
 
   if (GET_TYPE(m.moved) == Pawn)
   {
@@ -138,14 +157,6 @@ void ChessBoardPlayMove(ChessBoard *new, ChessBoard *old, Move m)
     }
   }
 
-  new->turn = !new->turn;
-  new->depth--;
-}
-
-void ChessBoardPassMove(ChessBoard *new, ChessBoard *old)
-{
-  memcpy(new, old, sizeof(ChessBoard));
-  new->enPassant = EMPTY_SQUARE;
   new->turn = !new->turn;
   new->depth--;
 }
@@ -231,35 +242,22 @@ BitBoard ChessBoardAttacked(LookupTable l, ChessBoard *cb)
   while (b)
   {
     Square s = BitBoardPopLSB(&b);
+    if (GET_TYPE(cb->squares[s]) == 6){
+      ChessBoardPrintBoard(*cb);
+      ChessBoardPrintMovelist(*cb);
+      
+      fprintf(stderr, "6 is an invalid piece type\n");
+      exit(EXIT_FAILURE);
+    }
     attacked |= LookupTableAttacks(l, s, GET_TYPE(cb->squares[s]), occupancies);
   }
   return attacked;
 }
 
+void ChessBoardPrintMovelist(ChessBoard cb){
+  for (int i = 0; i < cb.moves_completed; i++){
+    Move m = cb.movelist[i];
+    ChessBoardPrintMove(m, 0);
+  }
 
-// NEW CODE
-
-// Assumes the input string is in the correct format (e.g., "e2e4")
-Move parseMove(const char *moveStr, ChessBoard *cb) {
-    Piece *board = cb->squares;
-    Move move;
-
-    // Convert from algebraic notation to 0-63 square index
-    move.from = (8 - (moveStr[1] - '0')) * 8 + (moveStr[0] - 'a');
-    move.to = (8 - (moveStr[3] - '0')) * 8 + (moveStr[2] - 'a');
-    move.moved = board[move.from]; // Get the piece from the board at the "from" square
-
-    return move;
-}
-
-// Converts a Move object to a move string (e.g., "e2e4")
-char *moveToString(Move move) {
-    static char moveStr[5];
-    // Convert from 0-63 square index to algebraic notation
-    moveStr[0] = 'a' + (move.from % 8); // File of "from" square
-    moveStr[1] = '8' - (move.from / 8); // Rank of "from" square
-    moveStr[2] = 'a' + (move.to % 8);   // File of "to" square
-    moveStr[3] = '8' - (move.to / 8);   // Rank of "to" square
-    moveStr[4] = '\0';                  // Null terminator for the string
-    return moveStr;
 }
