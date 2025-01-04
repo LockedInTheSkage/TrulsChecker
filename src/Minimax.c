@@ -33,7 +33,7 @@ int minimax(LookupTable l, ChessBoard *oldBoard, int alpha, int beta, bool maxim
 
     if (movesSize == 0) {
         if (ChessBoardChecking(l, oldBoard) != EMPTY_BOARD) {
-            if (oldBoard->turn == White) {
+            if (oldBoard->turn == Black) {
                 return INT_MIN;
             } else {
                 return INT_MAX;
@@ -117,13 +117,14 @@ Move bestMove(LookupTable l, ChessBoard *boardPtr, int maxDepth, int timeLimit) 
             printf("Depth: %d\n", depthFrontier);
         }
         
-        
+        if (tempBestVal == INT_MAX || tempBestVal == INT_MIN) {
+            break;
+        }
         
     }
 
     if (bestVal == INT_MIN) {
-        // If no move is found within time limit
-        bestMove.from = bestMove.to = -1; // Indicating failure to find a move
+        bestMove = moves[0];
     }
 
     return bestMove;

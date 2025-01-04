@@ -14,9 +14,9 @@ BOARD = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 DEPTH = 5
 
 # Targets
-.PHONY: all clean
+.PHONY: clean all clean
 
-all: clean game #perft test testHeuristic
+all: game testZobrist#perft test testHeuristic
 
 perft:
 	$(CC) $(CFLAGS0) -o perft perft.c BitBoard.c LookupTable.c ChessBoard.c Branch.c -lm
@@ -29,6 +29,9 @@ test:
 
 testHeuristic:
 	$(CC) -o testHeuristic testHeuristic.c BitBoard.c LookupTable.c ChessBoard.c Branch.c Heuristic.c -lm -g
+
+testZobrist:
+	$(CC) -o testZobrist testZobrist.c BitBoard.c LookupTable.c ChessBoard.c Branch.c Zobrist.c -lm -g
 
 game:
 	$(CC) -o game game.c BitBoard.c LookupTable.c ChessBoard.c Branch.c Minimax.c Heuristic.c ChessBoardHelper.c -lm -g

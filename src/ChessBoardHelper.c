@@ -5,7 +5,7 @@
 #include "Heuristic.h"
 
 
-#include "ChessboardHelper.h"
+#include "ChessBoardHelper.h"
 
 
 #include <limits.h>

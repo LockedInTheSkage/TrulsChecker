@@ -75,7 +75,10 @@ BitBoard ChessBoardPinned(LookupTable l, ChessBoard *cb);
  */
 BitBoard ChessBoardAttacked(LookupTable l, ChessBoard *cb);
 
-
+/*
+ * Prints the move list of a chess board, aka the list of moves that have been played
+*/
 void ChessBoardPrintMovelist(ChessBoard cb);
+
 
 #endif

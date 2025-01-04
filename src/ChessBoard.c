@@ -128,10 +128,16 @@ void ChessBoardPlayMove(ChessBoard *new, ChessBoard *old, Move m)
   int offset = m.from - m.to;
   new->enPassant = EMPTY_SQUARE;
   new->castling &= ~(BitBoardSetBit(EMPTY_BOARD, m.from) | BitBoardSetBit(EMPTY_BOARD, m.to));
-  addPiece(new, m.to, m.moved);
+  if (GET_RANK(m.to) == BACK_RANK(!new->turn))
+  { // Promotion
+    addPiece(new, m.to, GET_PIECE(Queen, new->turn));
+    m.moved = GET_PIECE(Queen, new->turn);
+  }else{
+    addPiece(new, m.to, m.moved);
+  }
   addPiece(new, m.from, EMPTY_PIECE);
   new->movelist[new->moves_completed++] = m;
-
+  
   if (GET_TYPE(m.moved) == Pawn)
   {
     if ((offset == 16) || (offset == -16))
@@ -142,6 +148,7 @@ void ChessBoardPlayMove(ChessBoard *new, ChessBoard *old, Move m)
     { // Enpassant
       addPiece(new, m.to + (new->turn ? -8 : 8), EMPTY_PIECE);
     }
+    
   }
   else if (GET_TYPE(m.moved) == King)
   {
