@@ -16,7 +16,7 @@ DEPTH = 5
 # Targets
 .PHONY: all
 
-all: clean game testZobrist #perft test testHeuristic
+all: clean game
 
 perft:
 	$(CC) $(CFLAGS0) -o perft perft.c BitBoard.c LookupTable.c ChessBoard.c Branch.c -lm
