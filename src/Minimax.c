@@ -51,6 +51,10 @@ int minimax(LookupTable l, ChessBoard *oldBoard, int alpha, int beta, bool maxim
             ChessBoard newBoard;
             ChessBoardPlayMove(&newBoard, oldBoard, move);
 
+            if (newBoard.depth == 0 && oldBoard->squares[move.to] != EMPTY_SQUARE) {
+                newBoard.depth = 1;
+            }
+
             int eval = minimax(l, &newBoard, alpha, beta, false, startTime, timeLimit);
             maxEval = (eval > maxEval) ? eval : maxEval;
             alpha = (alpha > eval) ? alpha : eval;
@@ -66,6 +70,10 @@ int minimax(LookupTable l, ChessBoard *oldBoard, int alpha, int beta, bool maxim
             ChessBoard newBoard;
             ChessBoardPlayMove(&newBoard, oldBoard, move);
             
+            if (newBoard.depth == 0 && oldBoard->squares[move.to] != EMPTY_SQUARE) {
+                newBoard.depth = 1;
+            }
+
             int eval = minimax(l, &newBoard, alpha, beta, true, startTime, timeLimit);
             
             minEval = (eval < minEval) ? eval : minEval;

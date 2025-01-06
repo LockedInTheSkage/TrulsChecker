@@ -9,6 +9,7 @@
 #include <time.h>
 #include <stdio.h>
 
+#define PIECE_FACTOR 100
 
 #define OUR(t) (cb->pieces[GET_PIECE(t, cb->turn)])                                     // Bitboard representing our pieces of type t
 #define THEIR(t) (cb->pieces[GET_PIECE(t, !cb->turn)])                                  // Bitboard representing their pieces of type t
@@ -106,7 +107,7 @@ int heuristic(LookupTable l, ChessBoard *board) {
                 return INT_MIN;
             }
         }
-        score += BitBoardCountBits(pieces) * pieceScore(i) * (2*GET_COLOR(i)-1)*10000;
+        score += BitBoardCountBits(pieces) * pieceScore(i) * (2*GET_COLOR(i)-1)*PIECE_FACTOR;
     }
     
     

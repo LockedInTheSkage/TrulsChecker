@@ -74,6 +74,7 @@ static void runGame(ChessBoard *cbinit)
             }
         }
         if (strcmp(moveStr, "exit") == 0) {
+            ChessBoardPrintMovelist(*cb);
             break;
         }
 
