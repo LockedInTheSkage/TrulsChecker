@@ -10,6 +10,10 @@
 #include <stdio.h>
 
 #define PIECE_FACTOR 100
+#define OFFICER_FACTOR 5
+#define CASTLING_FACTOR 25
+
+#define BACK_RANK(c) (BitBoard)((c == White) ? SOUTH_EDGE : NORTH_EDGE)                // BitBoard representing the back rank given a color
 
 #define OUR(t) (cb->pieces[GET_PIECE(t, cb->turn)])                                     // Bitboard representing our pieces of type t
 #define THEIR(t) (cb->pieces[GET_PIECE(t, !cb->turn)])                                  // Bitboard representing their pieces of type t
@@ -80,12 +84,21 @@ int evaluateBoard(ChessBoard *cb) {
 
         while (ourPieces) {
             int square = BitBoardPopLSB(&ourPieces);
-            score += boardPriority[pieceType][63-square];
+            int multiplier = 1;
+            if(pieceScore(pieceType) > 2){
+                multiplier = OFFICER_FACTOR;
+            }
+            score += boardPriority[pieceType][63-square]*multiplier;
+
         }
 
         while (theirPieces) {
             int square = BitBoardPopLSB(&theirPieces);
-            score -= boardPriority[pieceType][square];
+            int multiplier = 1;
+            if(pieceScore(pieceType) > 2){
+                multiplier = OFFICER_FACTOR;
+            }
+            score -= boardPriority[pieceType][square]*multiplier;
         }
     }
 
@@ -109,7 +122,9 @@ int heuristic(LookupTable l, ChessBoard *board) {
         }
         score += BitBoardCountBits(pieces) * pieceScore(i) * (2*GET_COLOR(i)-1)*PIECE_FACTOR;
     }
-    
+
+    score -= BitBoardCountBits(board->castling & BACK_RANK(White))*CASTLING_FACTOR;
+    score += BitBoardCountBits(board->castling & BACK_RANK(Black))*CASTLING_FACTOR;
     
     score += evaluateBoard(board);
 
@@ -129,6 +144,6 @@ int pieceScore(Piece p) {
         case Queen:
             return 9;
         default:
-            return 0;
+            return 1;
     }
 }

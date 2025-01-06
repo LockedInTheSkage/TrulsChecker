@@ -51,7 +51,7 @@ int minimax(LookupTable l, ChessBoard *oldBoard, int alpha, int beta, bool maxim
             ChessBoard newBoard;
             ChessBoardPlayMove(&newBoard, oldBoard, move);
 
-            if (newBoard.depth == 0 && oldBoard->squares[move.to] != EMPTY_SQUARE) {
+            if (newBoard.depth == 0 && (oldBoard->squares[move.to] != EMPTY_PIECE) ) {
                 newBoard.depth = 1;
             }
 
@@ -69,8 +69,8 @@ int minimax(LookupTable l, ChessBoard *oldBoard, int alpha, int beta, bool maxim
 
             ChessBoard newBoard;
             ChessBoardPlayMove(&newBoard, oldBoard, move);
-            
-            if (newBoard.depth == 0 && oldBoard->squares[move.to] != EMPTY_SQUARE) {
+
+            if (newBoard.depth == 0 && (oldBoard->squares[move.to] != EMPTY_PIECE) ) {
                 newBoard.depth = 1;
             }
 
@@ -116,7 +116,7 @@ Move bestMove(LookupTable l, ChessBoard *boardPtr, int maxDepth, int timeLimit) 
             }
         }
 
-        depthFrontier++;
+        depthFrontier+=2;
         if ((((clock() - startTime) * 1000)) <= timeLimit*CLOCKS_PER_SEC) {
             bestMove = tempBestMove;
             bestVal = tempBestVal;
@@ -137,3 +137,5 @@ Move bestMove(LookupTable l, ChessBoard *boardPtr, int maxDepth, int timeLimit) 
 
     return bestMove;
 }
+
+

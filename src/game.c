@@ -32,7 +32,7 @@ static void runGame(ChessBoard *cbinit)
 
 
     if (cb->turn == Black){
-        cb->depth = 2;
+        cb->depth = 3;
         Move aiMove = bestMove(l, cb, -1, TIME_LIMIT);
         
         
@@ -98,7 +98,7 @@ static void runGame(ChessBoard *cbinit)
         
         
         
-        cb->depth = 2;
+        cb->depth = 3;
         Move aiMove = bestMove(l, cb, -1, TIME_LIMIT);
         
         
