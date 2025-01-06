@@ -79,12 +79,12 @@ int evaluateBoard(ChessBoard *cb) {
 
         while (ourPieces) {
             int square = BitBoardPopLSB(&ourPieces);
-            score += boardPriority[pieceType][square];
+            score += boardPriority[pieceType][63-square];
         }
 
         while (theirPieces) {
             int square = BitBoardPopLSB(&theirPieces);
-            score -= boardPriority[pieceType][63-square];
+            score -= boardPriority[pieceType][square];
         }
     }
 
@@ -106,7 +106,7 @@ int heuristic(LookupTable l, ChessBoard *board) {
                 return INT_MIN;
             }
         }
-        score += BitBoardCountBits(pieces) * pieceScore(i) * (2*GET_COLOR(i)-1);
+        score += BitBoardCountBits(pieces) * pieceScore(i) * (2*GET_COLOR(i)-1)*10000;
     }
     
     
@@ -118,15 +118,15 @@ int heuristic(LookupTable l, ChessBoard *board) {
 int pieceScore(Piece p) {
     switch (GET_TYPE(p)) {
         case Pawn:
-            return 100;
+            return 1;
         case Knight:
-            return 300;
+            return 3;
         case Bishop:
-            return 300;
+            return 3;
         case Rook:
-            return 500;
+            return 5;
         case Queen:
-            return 900;
+            return 9;
         default:
             return 0;
     }

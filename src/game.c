@@ -19,7 +19,7 @@ static int legalMove(char *moveStr, ChessBoard *cb, LookupTable l);
 
 int main(int argc  __attribute__((unused)), char **argv __attribute__((unused)))
 {
-    ChessBoard cb = ChessBoardNew("8/1k6/8/8/8/8/pr6z/6K1 w - - 0 1", 2); // "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+    ChessBoard cb = ChessBoardNew("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", 2); //  
     runGame(&cb);   
 }
 
@@ -30,6 +30,28 @@ static void runGame(ChessBoard *cbinit)
     LookupTable l = LookupTableNew();
     ChessBoard *new = malloc(sizeof(ChessBoard));
 
+
+    if (cb->turn == Black){
+        cb->depth = 2;
+        Move aiMove = bestMove(l, cb, -1, TIME_LIMIT);
+        
+        
+        printf("AI move: %s\n", moveToString(aiMove));
+        ChessBoardPlayMove(new, cb, aiMove);
+        memcpy(cb, new, sizeof(ChessBoard));
+
+        int gameState= checkGameOver(cb, l);
+        if (gameState == 1) {
+            ChessBoardPrintBoard(*cb); // Print the board
+            printf("You lose!\n");
+            LookupTableFree(l);
+
+        } else if (gameState == 2) {
+            ChessBoardPrintBoard(*cb); // Print the board
+            printf("Stalemate!\n");
+            LookupTableFree(l);
+        }
+    }
     
     while (1)
     {   
@@ -59,8 +81,7 @@ static void runGame(ChessBoard *cbinit)
 
         Move playerMove = parseMove(moveStr, cb);
         ChessBoardPlayMove(new, cb, playerMove);
-        cb = new;
-
+        memcpy(cb, new, sizeof(ChessBoard));
         printf("Player move: %s\n", moveStr);
         ChessBoardPrintBoard(*cb); // Print the board
         int gameState= checkGameOver(cb, l);
@@ -82,7 +103,7 @@ static void runGame(ChessBoard *cbinit)
         
         printf("AI move: %s\n", moveToString(aiMove));
         ChessBoardPlayMove(new, cb, aiMove);
-        cb = new;
+        memcpy(cb, new, sizeof(ChessBoard));
 
         gameState= checkGameOver(cb, l);
         if (gameState == 1) {
@@ -95,9 +116,6 @@ static void runGame(ChessBoard *cbinit)
             break;
         }
         
-        
-
-       
 
     }
     

@@ -1,11 +1,10 @@
 
-#include <stdlib.h>
-
-#include "Zobrist.h"
 #include "BitBoard.h"
+#include "LookupTable.h"
 #include "ChessBoard.h"
-
-
+#include "Zobrist.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 uint64_t rand64() {
   uint64_t r = 0;

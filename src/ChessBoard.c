@@ -128,14 +128,17 @@ void ChessBoardPlayMove(ChessBoard *new, ChessBoard *old, Move m)
   int offset = m.from - m.to;
   new->enPassant = EMPTY_SQUARE;
   new->castling &= ~(BitBoardSetBit(EMPTY_BOARD, m.from) | BitBoardSetBit(EMPTY_BOARD, m.to));
-  if (GET_RANK(m.to) == BACK_RANK(!new->turn))
+  
+  int pieceType = GET_TYPE(new->squares[m.from]);
+  addPiece(new, m.from, EMPTY_PIECE);
+  if (GET_RANK(m.to) == BACK_RANK(!new->turn) && pieceType == Pawn)
   { // Promotion
     addPiece(new, m.to, GET_PIECE(Queen, new->turn));
-    m.moved = GET_PIECE(Queen, new->turn);
   }else{
     addPiece(new, m.to, m.moved);
   }
-  addPiece(new, m.from, EMPTY_PIECE);
+
+  
   new->movelist[new->moves_completed++] = m;
   
   if (GET_TYPE(m.moved) == Pawn)
@@ -197,6 +200,7 @@ void ChessBoardPrintMove(Move m, long nodes)
 {
   printf("%c%d%c%d: %ld\n", 'a' + (m.from % EDGE_SIZE), EDGE_SIZE - (m.from / EDGE_SIZE), 'a' + (m.to % EDGE_SIZE), EDGE_SIZE - (m.to / EDGE_SIZE), nodes);
 }
+
 
 BitBoard ChessBoardChecking(LookupTable l, ChessBoard *cb)
 {

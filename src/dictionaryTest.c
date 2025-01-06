@@ -1,3 +1,4 @@
+
 #include "BitBoard.h"
 #include "LookupTable.h"
 #include "ChessBoard.h"
@@ -7,14 +8,14 @@
 
 #include <string.h>
 
-void test_zobrist_from_file(const char *filename);
+void test_dictionary_from_file(const char *filename);
 
 int main(int argc  __attribute__((unused)), char **argv __attribute__((unused))){
-    test_zobrist_from_file("data/ZobristTestPosition.in");
+    test_dictionary_from_file("data/ZobristTestPosition.in");
     return 0;  
 }
 
-void test_zobrist_from_file(const char *filename) {
+void test_dictionary_from_file(const char *filename) {
     printf("Testing Zobrist hash from file\n");
     printf("File: %s\n", filename);
     FILE *file = fopen(filename, "r");
