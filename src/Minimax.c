@@ -1,10 +1,13 @@
 #include "BitBoard.h"
 #include "LookupTable.h"
 #include "ChessBoard.h"
+#include "Zobrist.h"
+#include "Dictionary.h"
 #include "Branch.h"
 #include "Heuristic.h"
 #include "Minimax.h"
 #include "ChessBoardHelper.h"
+
 
 #include <stdio.h>
 #include <limits.h>
@@ -14,16 +17,20 @@
 
 int stage = 0;
 
-int minimax(LookupTable l, ChessBoard *oldBoard, int alpha, int beta, bool maximizingPlayer, clock_t startTime, int timeLimit) {
+int minimax(LookupTable l, ChessBoard *oldBoard, Dictionary *dict, int alpha, int beta, bool maximizingPlayer, clock_t startTime, int timeLimit) {
 
 
     if (((clock() - startTime) * 1000) >= timeLimit*CLOCKS_PER_SEC) {
         return INT_MIN;
     }
 
+    int dictScore = betterDictScore(oldBoard, dict);
+    if (dictScore) {
+        return dictScore;
+    }
 
     if (oldBoard->depth == 0) {
-        return heuristic(l, oldBoard);
+        return heuristic(l, oldBoard, dict);
     }
 
     Branch branches[BRANCHES_SIZE];
@@ -55,7 +62,7 @@ int minimax(LookupTable l, ChessBoard *oldBoard, int alpha, int beta, bool maxim
                 newBoard.depth = 1;
             }
 
-            int eval = minimax(l, &newBoard, alpha, beta, false, startTime, timeLimit);
+            int eval = minimax(l, &newBoard, dict, alpha, beta, false, startTime, timeLimit);
             maxEval = (eval > maxEval) ? eval : maxEval;
             alpha = (alpha > eval) ? alpha : eval;
             if (beta <= alpha) break; // Alpha-beta pruning
@@ -74,7 +81,7 @@ int minimax(LookupTable l, ChessBoard *oldBoard, int alpha, int beta, bool maxim
                 newBoard.depth = 1;
             }
 
-            int eval = minimax(l, &newBoard, alpha, beta, true, startTime, timeLimit);
+            int eval = minimax(l, &newBoard, dict, alpha, beta, true, startTime, timeLimit);
             
             minEval = (eval < minEval) ? eval : minEval;
             beta = (beta < eval) ? beta : eval;
@@ -84,7 +91,7 @@ int minimax(LookupTable l, ChessBoard *oldBoard, int alpha, int beta, bool maxim
     }
 }
 
-Move bestMove(LookupTable l, ChessBoard *boardPtr, int maxDepth, int timeLimit) {
+Move bestMove(LookupTable l, ChessBoard *boardPtr, Dictionary *dict, int maxDepth, int timeLimit) {
     clock_t startTime = clock();
     int bestVal = INT_MIN;
     Move bestMove;
@@ -109,8 +116,8 @@ Move bestMove(LookupTable l, ChessBoard *boardPtr, int maxDepth, int timeLimit) 
             ChessBoardPlayMove(&newBoard, boardPtr, move);
             newBoard.depth = depthFrontier;
             
-            int moveVal = minimax(l, &newBoard, INT_MIN, INT_MAX, newBoard.turn, startTime, timeLimit);
-            if (moveVal > tempBestVal) {
+            int moveVal = minimax(l, &newBoard, dict, INT_MIN, INT_MAX, newBoard.turn, startTime, timeLimit);
+            if ((moveVal > tempBestVal && newBoard.turn == White) || (moveVal < tempBestVal && newBoard.turn == Black)) {
                 tempBestMove = move;
                 tempBestVal = moveVal;
             }

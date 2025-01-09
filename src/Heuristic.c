@@ -2,7 +2,10 @@
 #include "LookupTable.h"
 #include "ChessBoard.h"
 #include "Branch.h"
+#include "Zobrist.h"
+#include "Dictionary.h"
 #include "Heuristic.h"
+
 
 #include <limits.h>
 #include <stdbool.h>
@@ -79,26 +82,20 @@ int evaluateBoard(ChessBoard *cb) {
     int score = 0;
 
     for (int pieceType = 0; pieceType < 6; pieceType++) {
-        BitBoard ourPieces = OUR(pieceType);
-        BitBoard theirPieces = THEIR(pieceType);
+        BitBoard whitePieces = cb->pieces[GET_PIECE(pieceType, White)];
+        BitBoard blackPieces = cb->pieces[GET_PIECE(pieceType, Black)];
 
-        while (ourPieces) {
-            int square = BitBoardPopLSB(&ourPieces);
+        while (whitePieces) {
+            int square = BitBoardPopLSB(&whitePieces);
             int multiplier = 1;
-            if(pieceScore(pieceType) > 2){
-                multiplier = OFFICER_FACTOR;
-            }
-            score += boardPriority[pieceType][63-square]*multiplier;
+            score -= boardPriority[pieceType][63-square]*multiplier;
 
         }
 
-        while (theirPieces) {
-            int square = BitBoardPopLSB(&theirPieces);
+        while (blackPieces) {
+            int square = BitBoardPopLSB(&blackPieces);
             int multiplier = 1;
-            if(pieceScore(pieceType) > 2){
-                multiplier = OFFICER_FACTOR;
-            }
-            score -= boardPriority[pieceType][square]*multiplier;
+            score += boardPriority[pieceType][square]*multiplier;
         }
     }
 
@@ -106,8 +103,13 @@ int evaluateBoard(ChessBoard *cb) {
 }
 
 
-int heuristic(LookupTable l, ChessBoard *board) {
+int heuristic(LookupTable l, ChessBoard *board, Dictionary *dict) {
     int score = 0;
+
+    int dictScore = betterDictScore(board, dict);
+    if (dictScore) {
+        return dictScore;
+    }
 
     
 
@@ -128,7 +130,17 @@ int heuristic(LookupTable l, ChessBoard *board) {
     
     score += evaluateBoard(board);
 
+    install_board(dict, board, score, board->depth);
+
     return score;
+}
+
+int betterDictScore(ChessBoard *board, Dictionary *dict){
+    nlist *np = lookup_board(dict, board);
+    if (np != NULL && np->depth >= board->depth) {
+        return np->score;
+    }
+    return 0;
 }
 
 int pieceScore(Piece p) {
@@ -147,3 +159,4 @@ int pieceScore(Piece p) {
             return 1;
     }
 }
+

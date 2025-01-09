@@ -2,8 +2,6 @@
 #include "LookupTable.h"
 #include "ChessBoard.h"
 #include "Branch.h"
-#include "Heuristic.h"
-
 
 #include "ChessBoardHelper.h"
 

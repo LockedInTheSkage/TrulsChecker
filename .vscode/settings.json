@@ -64,6 +64,8 @@
     "random": "c",
     "cmath": "c",
     "*.tcc": "c",
-    "heuristic.h": "c"
+    "heuristic.h": "c",
+    "stdlib.h": "c",
+    "dictionary.h": "c"
   }
 }

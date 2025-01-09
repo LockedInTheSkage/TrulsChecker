@@ -1,9 +1,14 @@
 #include "BitBoard.h"
 #include "LookupTable.h"
 #include "ChessBoard.h"
+#include "Zobrist.h"
+#include "Dictionary.h"
 #include "Branch.h"
 #include "Minimax.h"
 #include "ChessBoardHelper.h"
+
+
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,12 +33,15 @@ static void runGame(ChessBoard *cbinit)
 {
     ChessBoard *cb = cbinit;
     LookupTable l = LookupTableNew();
+    Dictionary dict;
+    init_dictionary(&dict);
+
     ChessBoard *new = malloc(sizeof(ChessBoard));
 
 
     if (cb->turn == Black){
-        cb->depth = 3;
-        Move aiMove = bestMove(l, cb, -1, TIME_LIMIT);
+        cb->depth = 2;
+        Move aiMove = bestMove(l, cb, &dict, -1, TIME_LIMIT);
         
         
         printf("AI move: %s\n", moveToString(aiMove));
@@ -98,8 +106,8 @@ static void runGame(ChessBoard *cbinit)
         
         
         
-        cb->depth = 3;
-        Move aiMove = bestMove(l, cb, -1, TIME_LIMIT);
+        cb->depth = 2;
+        Move aiMove = bestMove(l, cb, &dict, -1, TIME_LIMIT);
         
         
         printf("AI move: %s\n", moveToString(aiMove));
@@ -120,6 +128,7 @@ static void runGame(ChessBoard *cbinit)
 
     }
     
+    exit_dictionary(&dict);
     LookupTableFree(l);
     
 }
