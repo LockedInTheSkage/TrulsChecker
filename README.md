@@ -1,12 +1,17 @@
 # TrulsChecker
 Chess model built for beating my friend Truls
 
-Download gcc in order to build new file
+## Prerequisites
+- GCC compiler
 
-Run:
-"
-make
-./game
-"
+## Usage
+To create the executable file, run the following command:
+```
+make ./src/game
+```
 
-Or alternatively just run sjakkSpill in the src repository
+
+To run the executable file, run the following command:
+```
+./src/game
+```
