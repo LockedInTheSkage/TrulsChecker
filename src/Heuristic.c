@@ -13,94 +13,15 @@
 #include <stdio.h>
 
 #define PIECE_FACTOR 100
-#define OFFICER_FACTOR 5
 #define CASTLING_FACTOR 25
 
 #define BACK_RANK(c) (BitBoard)((c == White) ? SOUTH_EDGE : NORTH_EDGE)                // BitBoard representing the back rank given a color
 
-#define OUR(t) (cb->pieces[GET_PIECE(t, cb->turn)])                                     // Bitboard representing our pieces of type t
-#define THEIR(t) (cb->pieces[GET_PIECE(t, !cb->turn)])                                  // Bitboard representing their pieces of type t
-const int boardPriority[6][64] = {
-    // Pawn
-    {  0,  0,  0,  0,  0,  0,  0,  0,
-      50, 50, 50, 50, 50, 50, 50, 50,
-      10, 10, 20, 30, 30, 20, 10, 10,
-       5,  5, 10, 25, 25, 10,  5,  5,
-       0,  0,  0, 20, 20,  0,  0,  0,
-       5, -5,-10,  0,  0,-10, -5,  5,
-       5, 10, 10,-20,-20, 10, 10,  5,
-       0,  0,  0,  0,  0,  0,  0,  0 },
-    // Knight
-    {-50,-40,-30,-30,-30,-30,-40,-50,
-     -40,-20,  0,  0,  0,  0,-20,-40,
-     -30,  0, 10, 15, 15, 10,  0,-30,
-     -30,  5, 15, 20, 20, 15,  5,-30,
-     -30,  0, 15, 20, 20, 15,  0,-30,
-     -30,  5, 10, 15, 15, 10,  5,-30,
-     -40,-20,  0,  5,  5,  0,-20,-40,
-     -50,-40,-30,-30,-30,-30,-40,-50 },
-    // Bishop
-    {-20,-10,-10,-10,-10,-10,-10,-20,
-     -10,  0,  0,  0,  0,  0,  0,-10,
-     -10,  0,  5, 10, 10,  5,  0,-10,
-     -10,  5,  5, 10, 10,  5,  5,-10,
-     -10,  0, 10, 10, 10, 10,  0,-10,
-       0, 10, 10, 10, 10, 10, 10,  0,
-     -10,  5,  0,  0,  0,  0,  5,-10,
-     -20,-10,-10,-10,-10,-10,-10,-20 },
-    // Rook
-    {  0,  0,  0,  0,  0,  0,  0,  0,
-       5, 10, 10, 10, 10, 10, 10,  5,
-      -5,  0,  0,  0,  0,  0,  0, -5,
-      -5,  0,  0,  0,  0,  0,  0, -5,
-      -5,  0,  0,  0,  0,  0,  0, -5,
-      -5,  0,  0,  0,  0,  0,  0, -5,
-      -5,  0,  0,  0,  0,  0,  0, -5,
-       0,  0,  0,  5,  5,  0,  0,  0 },
-    // Queen
-    {-20,-10,-10, -5, -5,-10,-10,-20,
-     -10,  0,  0,  0,  0,  0,  0,-10,
-     -10,  0,  5,  5,  5,  5,  0,-10,
-      -5,  0,  5,  5,  5,  5,  0, -5,
-       0,  0,  5,  5,  5,  5,  0, -5,
-     -10,  5,  5,  5,  5,  5,  0,-10,
-     -10,  0,  5,  0,  0,  0,  0,-10,
-     -20,-10,-10, -5, -5,-10,-10,-20 },
-    // King (early game)
-    {-30,-40,-40,-50,-50,-40,-40,-30,
-     -30,-40,-40,-50,-50,-40,-40,-30,
-     -30,-40,-40,-50,-50,-40,-40,-30,
-     -30,-40,-40,-50,-50,-40,-40,-30,
-     -20,-30,-30,-40,-40,-30,-30,-20,
-     -10,-20,-20,-20,-20,-20,-20,-10,
-      20, 20,  0,  0,  0,  0, 20, 20,
-      20, 30, 10,  0,  0, 10, 30, 20 }
-};
+#define WHITE_PIECE(t) (board->pieces[GET_PIECE(t, White)])                                     // Bitboard representing our pieces of type t
+#define BLACK_PIECE(t) (board->pieces[GET_PIECE(t, Black)])                                  // Bitboard representing their pieces of type t
 
-// Heuristic evaluation function
-int evaluateBoard(ChessBoard *cb) {
-    int score = 0;
-
-    for (int pieceType = 0; pieceType < 6; pieceType++) {
-        BitBoard whitePieces = cb->pieces[GET_PIECE(pieceType, White)];
-        BitBoard blackPieces = cb->pieces[GET_PIECE(pieceType, Black)];
-
-        while (whitePieces) {
-            int square = BitBoardPopLSB(&whitePieces);
-            int multiplier = 1;
-            score -= boardPriority[pieceType][63-square]*multiplier;
-
-        }
-
-        while (blackPieces) {
-            int square = BitBoardPopLSB(&blackPieces);
-            int multiplier = 1;
-            score += boardPriority[pieceType][square]*multiplier;
-        }
-    }
-
-    return score;
-}
+#define WHITE_PIECES (WHITE_PIECE(Pawn) | WHITE_PIECE(Knight) | WHITE_PIECE(Bishop) | WHITE_PIECE(Rook) | WHITE_PIECE(Queen) | WHITE_PIECE(King)) // Bitboard of all our pieces
+#define BLACK_PIECES (BLACK_PIECE(Pawn) | BLACK_PIECE(Knight) | BLACK_PIECE(Bishop) | BLACK_PIECE(Rook) | BLACK_PIECE(Queen) | BLACK_PIECE(King)) // Bitboard of all their pieces
 
 
 int heuristic(LookupTable l, ChessBoard *board, Dictionary *dict) {
@@ -123,12 +44,39 @@ int heuristic(LookupTable l, ChessBoard *board, Dictionary *dict) {
             }
         }
         score += BitBoardCountBits(pieces) * pieceScore(i) * (2*GET_COLOR(i)-1)*PIECE_FACTOR;
+        if (GET_TYPE(i) == King) {
+            continue;
+        }
+        for (int j = 0; j < 64; j++) {
+            if (pieces & (1ULL << j)) {
+                BitBoard targets;
+                Type piece_type = GET_TYPE(i);
+                if (GET_COLOR(i) == White) {
+                    targets = BLACK_PIECES;
+                } else {
+                    targets = WHITE_PIECES;
+                }
+                if (GET_TYPE(i)==Pawn){
+                    BitBoard attacks;
+                    if (GET_COLOR(i)==White){
+                        attacks = (BitBoardShiftNW(BitBoardSetBit(EMPTY_BOARD, j)) | BitBoardShiftNE(BitBoardSetBit(EMPTY_BOARD, j))) & targets;
+                    }else{
+                        attacks = (BitBoardShiftSW(BitBoardSetBit(EMPTY_BOARD, j)) | BitBoardShiftSE(BitBoardSetBit(EMPTY_BOARD, j))) & targets;
+                    }
+                    score += BitBoardCountBits(attacks) * pieceScore(i) * (2*GET_COLOR(i)-1)*PIECE_FACTOR;
+                }else{
+                    score += BitBoardCountBits(LookupTableAttacks(l, j, piece_type, targets)) * pieceScore(i) * (2*GET_COLOR(i)-1)*PIECE_FACTOR;
+                }
+                
+                
+            }
+        }
     }
-
+    
     score -= BitBoardCountBits(board->castling & BACK_RANK(White))*CASTLING_FACTOR;
     score += BitBoardCountBits(board->castling & BACK_RANK(Black))*CASTLING_FACTOR;
     
-    score += evaluateBoard(board);
+    
 
     install_board(dict, board, score, board->depth);
 
