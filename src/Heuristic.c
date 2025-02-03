@@ -13,7 +13,9 @@
 #include <stdio.h>
 
 #define PIECE_FACTOR 100
+#define ATTACK_FACTOR 2
 #define CASTLING_FACTOR 25
+
 
 #define BACK_RANK(c) (BitBoard)((c == White) ? SOUTH_EDGE : NORTH_EDGE)                // BitBoard representing the back rank given a color
 
@@ -26,11 +28,13 @@
 
 int heuristic(LookupTable l, ChessBoard *board, Dictionary *dict) {
     int score = 0;
-
-    int dictScore = betterDictScore(board, dict);
-    if (dictScore) {
-        return dictScore;
+    if (dict->zobrist != NULL) {
+        int dictScore = betterDictScore(board, dict);
+        if (dictScore) {
+            return dictScore;
+        }
     }
+    
 
     
 
@@ -63,9 +67,9 @@ int heuristic(LookupTable l, ChessBoard *board, Dictionary *dict) {
                     }else{
                         attacks = (BitBoardShiftSW(BitBoardSetBit(EMPTY_BOARD, j)) | BitBoardShiftSE(BitBoardSetBit(EMPTY_BOARD, j))) & targets;
                     }
-                    score += BitBoardCountBits(attacks) * pieceScore(i) * (2*GET_COLOR(i)-1)*PIECE_FACTOR;
+                    score += BitBoardCountBits(attacks) * pieceScore(i) * (2*GET_COLOR(i)-1)*ATTACK_FACTOR;
                 }else{
-                    score += BitBoardCountBits(LookupTableAttacks(l, j, piece_type, targets)) * pieceScore(i) * (2*GET_COLOR(i)-1)*PIECE_FACTOR;
+                    score += BitBoardCountBits(LookupTableAttacks(l, j, piece_type, targets)) * pieceScore(i) * (2*GET_COLOR(i)-1)*ATTACK_FACTOR;
                 }
                 
                 
@@ -77,8 +81,9 @@ int heuristic(LookupTable l, ChessBoard *board, Dictionary *dict) {
     score += BitBoardCountBits(board->castling & BACK_RANK(Black))*CASTLING_FACTOR;
     
     
-
-    install_board(dict, board, score, board->depth);
+    if (dict->zobrist != NULL) {
+        install_board(dict, board, score, board->depth);
+    }
 
     return score;
 }

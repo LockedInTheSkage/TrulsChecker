@@ -34,7 +34,7 @@ static void runGame(ChessBoard *cbinit)
     ChessBoard *cb = cbinit;
     LookupTable l = LookupTableNew();
     Dictionary dict;
-    init_dictionary(&dict);
+    //init_dictionary(&dict);
 
     ChessBoard *new = malloc(sizeof(ChessBoard));
 
@@ -127,8 +127,9 @@ static void runGame(ChessBoard *cbinit)
         
 
     }
-    
-    exit_dictionary(&dict);
+    if(dict.zobrist != NULL){
+        exit_dictionary(&dict);
+    }
     LookupTableFree(l);
     
 }

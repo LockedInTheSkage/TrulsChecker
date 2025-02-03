@@ -24,10 +24,13 @@ int minimax(LookupTable l, ChessBoard *oldBoard, Dictionary *dict, int alpha, in
         return INT_MIN;
     }
 
-    int dictScore = betterDictScore(oldBoard, dict);
-    if (dictScore) {
-        return dictScore;
+    if (dict->zobrist != NULL) {
+        int dictScore = betterDictScore(oldBoard, dict);
+        if (dictScore) {
+            return dictScore;
+        }
     }
+    
 
     if (oldBoard->depth == 0) {
         return heuristic(l, oldBoard, dict);
