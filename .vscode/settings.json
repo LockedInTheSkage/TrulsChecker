@@ -66,6 +66,7 @@
     "*.tcc": "c",
     "heuristic.h": "c",
     "stdlib.h": "c",
-    "dictionary.h": "c"
+    "dictionary.h": "c",
+    "bitboard.h": "c"
   }
 }

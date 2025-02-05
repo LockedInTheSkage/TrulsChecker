@@ -8,7 +8,7 @@ endif
 # Targets
 .PHONY: all
 
-all: clean game testDictionary
+all: clean game train
 
 testHeuristic:
 	$(CC) -o testHeuristic testHeuristic.c BitBoard.c LookupTable.c ChessBoard.c Branch.c Heuristic.c -lm -g
@@ -19,8 +19,11 @@ testZobrist:
 testDictionary:
 	$(CC) -o testDictionary testDictionary.c Zobrist.c Dictionary.c BitBoard.c LookupTable.c ChessBoard.c Heuristic.c -lm -g
 
+train:
+	$(CC) -o train train.c Zobrist.c BitBoard.c LookupTable.c ChessBoard.c  Dictionary.c Branch.c OpeningBook.c Minimax.c Heuristic.c ChessBoardHelper.c -lm -g
+
 game:
 	$(CC) -o game game.c Zobrist.c BitBoard.c LookupTable.c ChessBoard.c Dictionary.c Branch.c Minimax.c Heuristic.c ChessBoardHelper.c -lm -g
 
 clean:
-	@rm -f game testDictionary testZobrist testHeuristic *.gcda *.gcno
+	@rm -f game train testDictionary testZobrist testHeuristic *.gcda *.gcno

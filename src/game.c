@@ -1,3 +1,4 @@
+#define _XOPEN_SOURCE 700
 #include "BitBoard.h"
 #include "LookupTable.h"
 #include "ChessBoard.h"
@@ -9,7 +10,8 @@
 
 
 
-
+#include <signal.h>
+#include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -22,8 +24,24 @@ static int checkGameOver(ChessBoard *cb, LookupTable l);
 
 static int legalMove(char *moveStr, ChessBoard *cb, LookupTable l);
 
+void clean_lookups(int sig);
+
+ChessBoard *cb;
+LookupTable l;
+Dictionary dict;
+
 int main(int argc  __attribute__((unused)), char **argv __attribute__((unused)))
 {
+    struct sigaction sa;
+    sa.sa_handler = clean_lookups;
+    sa.sa_flags = 0;
+    sigemptyset(&sa.sa_mask);
+    sigaction(SIGINT, &sa, NULL);  // Handle Ctrl+C
+    sigaction(SIGTERM, &sa, NULL); // Handle termination
+    sigaction(SIGQUIT, &sa, NULL); // Handle quit
+    sigaction(SIGTSTP, &sa, NULL); // Handle Ctrl+Z
+
+
     ChessBoard cb = ChessBoardNew("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", 2); //  
     runGame(&cb);   
 }
@@ -31,17 +49,16 @@ int main(int argc  __attribute__((unused)), char **argv __attribute__((unused)))
 
 static void runGame(ChessBoard *cbinit)
 {
-    ChessBoard *cb = cbinit;
-    LookupTable l = LookupTableNew();
-    Dictionary dict;
-    //init_dictionary(&dict);
+    cb = cbinit;
+    init_dictionary(&dict);
+    l = LookupTableNew();
 
     ChessBoard *new = malloc(sizeof(ChessBoard));
 
 
     if (cb->turn == Black){
         cb->depth = 2;
-        Move aiMove = bestMove(l, cb, &dict, -1, TIME_LIMIT);
+        Move aiMove = bestMove(l, cb, &dict, -1, TIME_LIMIT, 2);
         
         
         printf("AI move: %s\n", moveToString(aiMove));
@@ -107,7 +124,7 @@ static void runGame(ChessBoard *cbinit)
         
         
         cb->depth = 2;
-        Move aiMove = bestMove(l, cb, &dict, -1, TIME_LIMIT);
+        Move aiMove = bestMove(l, cb, &dict, -1, TIME_LIMIT, 2);
         
         
         printf("AI move: %s\n", moveToString(aiMove));
@@ -127,10 +144,8 @@ static void runGame(ChessBoard *cbinit)
         
 
     }
-    if(dict.zobrist != NULL){
-        exit_dictionary(&dict);
-    }
-    LookupTableFree(l);
+    
+    clean_lookups(0);
     
 }
 
@@ -172,4 +187,16 @@ int legalMove(char *moveStr, ChessBoard *cb, LookupTable l){
         }
     }
     return 0;
+}
+
+void clean_lookups(int sig) {
+    printf("\nGame over\n");
+    
+    if(dict.zobrist != NULL){
+        exit_dictionary(&dict);
+    }
+    if (l != NULL){
+        LookupTableFree(l);
+    }
+    exit(0);
 }

@@ -138,9 +138,7 @@ void ChessBoardPlayMove(ChessBoard *new, ChessBoard *old, Move m)
     addPiece(new, m.to, m.moved);
   }
 
-  
   new->movelist[new->moves_completed++] = m;
-  
   if (GET_TYPE(m.moved) == Pawn)
   {
     if ((offset == 16) || (offset == -16))
