@@ -1,4 +1,4 @@
 TrulsChecker 2024 - 2025 by lockedInTheSkage
 
 This product includes software developed by 
-alexjson (https://github.com/alexjasson/templechess).
+alexjasson (https://github.com/alexjasson/templechess).
