@@ -22,10 +22,10 @@ void mergeSort(int *scores, Move *moves, int l, int r);
 void merge(int *scores, Move *moves, int l, int m, int r);
 
 
-int minimax(LookupTable l, ChessBoard *oldBoard, Dictionary *dict, int alpha, int beta, bool maximizingPlayer, clock_t startTime, int timeLimit) {
+int minimax(LookupTable l, ChessBoard *oldBoard, Dictionary *dict, int alpha, int beta, bool maximizingPlayer, clock_t startTime, int timeLimit, bool mustFinish) {
 
 
-    if (((clock() - startTime) * 1000) >= timeLimit*CLOCKS_PER_SEC) {
+    if (((clock() - startTime) * 1000) >= timeLimit*CLOCKS_PER_SEC && !mustFinish) {
         return maximizingPlayer ? INT_MIN : INT_MAX;
     }
 
@@ -73,7 +73,7 @@ int minimax(LookupTable l, ChessBoard *oldBoard, Dictionary *dict, int alpha, in
                 newBoard.depth = 1;
             }
 
-            int eval = minimax(l, &newBoard, dict, alpha, beta, false, startTime, timeLimit);
+            int eval = minimax(l, &newBoard, dict, alpha, beta, false, startTime, timeLimit, mustFinish);
             maxEval = (eval > maxEval) ? eval : maxEval;
             alpha = (alpha > eval) ? alpha : eval;
             if (beta <= alpha){
@@ -94,7 +94,7 @@ int minimax(LookupTable l, ChessBoard *oldBoard, Dictionary *dict, int alpha, in
                 newBoard.depth = 1;
             }
 
-            int eval = minimax(l, &newBoard, dict, alpha, beta, true, startTime, timeLimit);
+            int eval = minimax(l, &newBoard, dict, alpha, beta, true, startTime, timeLimit, mustFinish);
             
             minEval = (eval < minEval) ? eval : minEval;
             beta = (beta < eval) ? beta : eval;
@@ -106,7 +106,7 @@ int minimax(LookupTable l, ChessBoard *oldBoard, Dictionary *dict, int alpha, in
     }
 }
 
-Move bestMove(LookupTable l, ChessBoard *boardPtr, Dictionary *dict, int maxDepth, int timeLimit, int depth_speed) {
+Move bestMove(LookupTable l, ChessBoard *boardPtr, Dictionary *dict, int minDepth, int timeLimit, int depth_speed, bool verbose) {
     clock_t startTime = clock();
     int bestVal = boardPtr->turn == White ? INT_MAX : INT_MIN;
     Move bestMove;
@@ -119,9 +119,10 @@ Move bestMove(LookupTable l, ChessBoard *boardPtr, Dictionary *dict, int maxDept
     sortMoves(moves, movesSize, boardPtr, l, dict);
     
     while (
-        ((((clock() - startTime) * 1000)) <= timeLimit*CLOCKS_PER_SEC)
-        && (maxDepth == -1 || depthFrontier < maxDepth)    
-            ){
+        (((clock() - startTime) * 1000)) <= timeLimit*CLOCKS_PER_SEC
+        || depthFrontier <= minDepth
+    ) {
+
         int tempBestVal = boardPtr->turn == White ? INT_MAX : INT_MIN;
         Move tempBestMove;
         for (int i = 0; i < movesSize; i++) {
@@ -131,7 +132,12 @@ Move bestMove(LookupTable l, ChessBoard *boardPtr, Dictionary *dict, int maxDept
             ChessBoardPlayMove(&newBoard, boardPtr, move);
             newBoard.depth = depthFrontier;
             
-            int moveVal = minimax(l, &newBoard, dict, INT_MIN, INT_MAX, newBoard.turn, startTime, timeLimit);
+
+            // Main call of minimax
+            int moveVal = minimax(l, &newBoard, dict, INT_MIN, INT_MAX, newBoard.turn, startTime, timeLimit, depthFrontier <= minDepth);
+
+
+
             if ((moveVal > tempBestVal && newBoard.turn == White) || (moveVal < tempBestVal && newBoard.turn == Black)) {
                 tempBestMove = move;
                 tempBestVal = moveVal;
@@ -139,13 +145,14 @@ Move bestMove(LookupTable l, ChessBoard *boardPtr, Dictionary *dict, int maxDept
         }
 
         
-        if ((((clock() - startTime) * 1000)) <= timeLimit*CLOCKS_PER_SEC) {
+        if ((((clock() - startTime) * 1000)) <= timeLimit*CLOCKS_PER_SEC || depthFrontier <= minDepth) {
             bestMove = tempBestMove;
             bestVal = tempBestVal;
-            /* printf("Depth: %d\n", depthFrontier);
-            printf("Best move: %s\n", moveToString(bestMove));
-            printf("Best score: %d\n", bestVal); */
-            
+            if (verbose) {
+                printf("Depth: %d\n", depthFrontier);
+                printf("Best move: %s\n", moveToString(bestMove));
+                printf("Best score: %d\n", bestVal);
+            }
         }
         depthFrontier+=depth_speed;
         

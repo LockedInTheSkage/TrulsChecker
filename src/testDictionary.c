@@ -8,7 +8,7 @@
 #include "Dictionary.h"
 #include "Heuristic.h"
 
-#define TEST_POSITIONS_FILE "data/dictionaryTestPositions.in"
+#define TEST_POSITIONS_FILE "src/data/dictionaryTestPositions.in"
 
 void test_dictionary(Dictionary *dict) {
     FILE *file = fopen(TEST_POSITIONS_FILE, "r");

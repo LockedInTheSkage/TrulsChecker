@@ -61,7 +61,7 @@ static void runGame(ChessBoard *cbinit)
 
     if (cb->turn == Black){
         cb->depth = 2;
-        Move aiMove = bestMove(l, cb, &dict, -1, TIME_LIMIT, 1);
+        Move aiMove = bestMove(l, cb, &dict, -1, TIME_LIMIT, 1, false);
         
         
 
@@ -85,7 +85,7 @@ static void runGame(ChessBoard *cbinit)
         
         ChessBoardPrintBoard(*cb); 
         cb->depth = 2;
-        Move whiteMove = bestMove(l, cb, &dict, -1, TIME_LIMIT, 1);
+        Move whiteMove = bestMove(l, cb, &dict, -1, TIME_LIMIT, 1, false);
         
         ChessBoardPlayMove(cb, cb, whiteMove);
 
@@ -106,7 +106,7 @@ static void runGame(ChessBoard *cbinit)
         
         
         cb->depth = 2;
-        Move blackMove = bestMove(l, cb, &dict, -1, TIME_LIMIT, 1);
+        Move blackMove = bestMove(l, cb, &dict, -1, TIME_LIMIT, 1, false);
         
         
         printf("Black move: %s\n", moveToString(blackMove));

@@ -8,7 +8,7 @@
 #include "Heuristic.h"
 
 // Maximum line length in the .in file
-#define POSITIONS "data/heuristicTestPositions.in"
+#define POSITIONS "src/data/heuristicTestPositions.in"
 #define MAX_LINE_LENGTH 512
 
 void trim_newline(char *str) {
@@ -58,7 +58,7 @@ int main(int argc, char *argv[]) {
         ChessBoard board = ChessBoardNew(fen, 0);
 
         // Compute the heuristic score
-        int computedScore = heuristic(lookup, &board);
+        int computedScore = heuristic(lookup, &board, NULL);
 
         // Compare with the expected score
         total++;

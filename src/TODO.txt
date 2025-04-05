@@ -1,2 +1,0 @@
-The heuristic is not very well fine tuned. If the attackfactor vs piecefactor is too high then it will sacrifice pieces for temporary good positions.
-We need to find a way to tune these parameters

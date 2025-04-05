@@ -12,7 +12,7 @@
 #include "Dictionary.h"
 
 
-static const char *DICT_FILENAME = "data/heuristicDict.dat";
+static const char *DICT_FILENAME = "src/data/heuristicDict.dat";
 
 /* init_dictionary: initialize the dictionary */
 void init_dictionary(Dictionary *dict)
@@ -37,8 +37,7 @@ void init_dictionary(Dictionary *dict)
 }
 
 /* hash: form hash value for uint64_t key */
-unsigned hash(uint64_t key)
-{
+unsigned hash(uint64_t key){
     return key % HASHSIZE;
 }
 

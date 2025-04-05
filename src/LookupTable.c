@@ -10,7 +10,7 @@
 #define POWERSET_SIZE(n) (1 << n)
 #define BISHOP_ATTACKS_POWERSET 512
 #define ROOK_ATTACKS_POWERSET 4096
-#define MAGIC_NUMBERS "data/magicNumbers.out"
+#define MAGIC_NUMBERS "src/data/magicNumbers.out"
 
 typedef enum
 {

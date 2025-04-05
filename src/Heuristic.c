@@ -12,9 +12,9 @@
 #include <time.h>
 #include <stdio.h>
 
-#define PIECE_FACTOR 1000
-#define ATTACK_FACTOR 1
-#define CASTLING_FACTOR 250
+#define PIECE_FACTOR 100
+#define ATTACK_FACTOR 2
+#define CASTLING_FACTOR 25
 
 
 #define BACK_RANK(c) (BitBoard)((c == White) ? SOUTH_EDGE : NORTH_EDGE)                // BitBoard representing the back rank given a color
@@ -28,6 +28,7 @@
 
 int heuristic(LookupTable l, ChessBoard *board, Dictionary *dict) {
     int score = 0;
+
     if (dict->zobrist != NULL) {
         int dictScore = betterDictScore(board, dict);
         if (dictScore) {

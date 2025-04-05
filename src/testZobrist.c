@@ -10,7 +10,7 @@
 void test_zobrist_from_file(const char *filename);
 
 int main(int argc  __attribute__((unused)), char **argv __attribute__((unused))){
-    test_zobrist_from_file("data/ZobristTestPosition.in");
+    test_zobrist_from_file("src/data/ZobristTestPosition.in");
     return 0;  
 }
 
