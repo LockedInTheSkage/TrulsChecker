@@ -16,7 +16,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define TIME_LIMIT 10000000 // in milliseconds
+#define TIME_LIMIT 10*60000 // In milliseconds. 60000 = 1 minute
 
 static void runGame(ChessBoard *cbinit);
 
@@ -58,73 +58,10 @@ static void runGame(ChessBoard *cbinit)
 {
     cb = cbinit;
 
-
-    if (cb->turn == Black){
-        cb->depth = 2;
-        Move aiMove = bestMove(l, cb, &dict, -1, TIME_LIMIT, 1, false);
-        
-        
-
-        ChessBoardPlayMove(cb, cb, aiMove);
-
-        int gameState= checkGameOver(cb, l);
-        if (gameState == 1) {
-            ChessBoardPrintBoard(*cb); 
-            printf("You lose!\n");
-            
-
-        } else if (gameState == 2) {
-            ChessBoardPrintBoard(*cb); 
-            printf("Stalemate!\n");
-            
-        }
-    }
-    printf("Let's play!\n");
-    while (!checkGameOver(cb, l))
-    {   
-        
-        ChessBoardPrintBoard(*cb); 
-        cb->depth = 2;
-        Move whiteMove = bestMove(l, cb, &dict, -1, TIME_LIMIT, 1, true);
-        
-        ChessBoardPlayMove(cb, cb, whiteMove);
-
-        printf("White move: %s\n", moveToString(whiteMove));
-        int gameState= checkGameOver(cb, l);
-        if (gameState == 1) {
-            ChessBoardPrintBoard(*cb); 
-            printf("You lose!\n");
-            
-
-        } else if (gameState == 2) {
-            ChessBoardPrintBoard(*cb); 
-            printf("Stalemate!\n");
-            
-        }
-
-        ChessBoardPrintBoard(*cb); 
-        
-        
-        cb->depth = 2;
-        Move blackMove = bestMove(l, cb, &dict, -1, TIME_LIMIT, 1, true);
-        
-        
-        printf("Black move: %s\n", moveToString(blackMove));
-        ChessBoardPlayMove(cb, cb, blackMove);
-
-        gameState= checkGameOver(cb, l);
-        if (gameState == 1) {
-            ChessBoardPrintBoard(*cb); 
-            printf("You lose!\n");
-            break;
-        } else if (gameState == 2) {
-            ChessBoardPrintBoard(*cb); 
-            printf("Stalemate!\n");
-            break;
-        }
-        
-
-    }
+    cb->depth = 2;
+    ChessBoardPrintBoard(*cb); 
+    Move aiMove = bestMove(l, cb, &dict, -1, TIME_LIMIT, 1, true);
+    
     cb = OpeningBookNext(openingBook);
     if (cb == NULL) {
         printf("Opening book is empty\n");
@@ -135,45 +72,6 @@ static void runGame(ChessBoard *cbinit)
     
 }
 
-
-int checkGameOver(ChessBoard *cb, LookupTable l){
-    Branch branches[BRANCHES_SIZE];
-    int branchesSize = BranchFill(l, cb, branches);
-    Move moves[MOVES_SIZE];
-    int movesSize = BranchExtract(branches, branchesSize, moves);
-
-    if(movesSize == 0){
-        BitBoard checking = ChessBoardChecking(l, cb);
-        if (checking != EMPTY_BOARD){
-        return 1;
-        } else {
-        return 2;
-        }
-    } else{
-        return 0;
-    }
-}
-
-int legalMove(char *moveStr, ChessBoard *cb, LookupTable l){
-    if (strcmp(moveStr, "exit") == 0) {
-        return 1;
-    }
-    if (strlen(moveStr) != 4) {
-        return 0;
-    }
-    Move move = parseMove(moveStr, cb);
-
-    Branch branches[BRANCHES_SIZE];
-    int branchesSize = BranchFill(l, cb, branches);
-    Move moves[MOVES_SIZE];
-    int movesSize = BranchExtract(branches, branchesSize, moves);
-    for (int i = 0; i < movesSize; i++) {
-        if (moves[i].from == move.from && moves[i].to == move.to) {
-            return 1;
-        }
-    }
-    return 0;
-}
 
 void clean_lookups(int sig) {
     printf("\nGame over\n");
