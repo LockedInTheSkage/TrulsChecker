@@ -3,6 +3,6 @@
 
 int heuristic(LookupTable l, ChessBoard *board, Dictionary *dict);
 int betterDictScore(ChessBoard *board, Dictionary *dict);
-int pieceScore(Piece p);
+int pieceScore(int pieceType);
 
 #endif

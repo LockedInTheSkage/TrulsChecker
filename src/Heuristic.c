@@ -13,7 +13,7 @@
 #include <stdio.h>
 
 #define PIECE_FACTOR 100
-#define ATTACK_FACTOR 2
+#define ATTACK_FACTOR 3
 #define CASTLING_FACTOR 25
 
 
@@ -28,6 +28,16 @@
 
 int heuristic(LookupTable l, ChessBoard *board, Dictionary *dict) {
     int score = 0;
+    
+    
+    // Check if the game is over
+    if (WHITE_PIECE(King) == 0) {
+        return INT_MAX;
+    }
+    if (BLACK_PIECE(King) == 0) {
+        return INT_MIN;
+    }
+    
 
     if (dict->zobrist != NULL) {
         int dictScore = betterDictScore(board, dict);
@@ -35,46 +45,58 @@ int heuristic(LookupTable l, ChessBoard *board, Dictionary *dict) {
             return dictScore;
         }
     }
-    
-
-    
 
     for (int i = 0; i < PIECE_SIZE; i++) {
-        BitBoard pieces = board->pieces[i];
-        if (GET_TYPE(i) == King && BitBoardCountBits(pieces) == 0) {
-            if (GET_COLOR(i) == White) {
-                return INT_MAX;
-            } else {
-                return INT_MIN;
-            }
-        }
-        score += BitBoardCountBits(pieces) * pieceScore(i) * (2*GET_COLOR(i)-1)*PIECE_FACTOR;
+
         if (GET_TYPE(i) == King) {
             continue;
         }
-        for (int j = 0; j < 64; j++) {
-            if (pieces & (1ULL << j)) {
-                BitBoard targets;
-                Type piece_type = GET_TYPE(i);
-                if (GET_COLOR(i) == White) {
-                    targets = BLACK_PIECES;
-                } else {
-                    targets = WHITE_PIECES;
-                }
-                if (GET_TYPE(i)==Pawn){
-                    BitBoard attacks;
-                    if (GET_COLOR(i)==White){
-                        attacks = (BitBoardShiftNW(BitBoardSetBit(EMPTY_BOARD, j)) | BitBoardShiftNE(BitBoardSetBit(EMPTY_BOARD, j))) & targets;
-                    }else{
-                        attacks = (BitBoardShiftSW(BitBoardSetBit(EMPTY_BOARD, j)) | BitBoardShiftSE(BitBoardSetBit(EMPTY_BOARD, j))) & targets;
-                    }
-                    score += BitBoardCountBits(attacks) * pieceScore(i) * (2*GET_COLOR(i)-1)*ATTACK_FACTOR;
-                }else{
-                    score += BitBoardCountBits(LookupTableAttacks(l, j, piece_type, targets)) * pieceScore(i) * (2*GET_COLOR(i)-1)*ATTACK_FACTOR;
-                }
-                
-                
+
+        BitBoard pieces = board->pieces[i];
+        int pieceCount = BitBoardCountBits(pieces);
+        
+        score += pieceCount * pieceScore(i) * (2*GET_COLOR(i)-1) * PIECE_FACTOR;
+        
+    }
+    
+    
+    // Find threats
+
+    BitBoard black_targets = BLACK_PIECES;
+    BitBoard white_targets = WHITE_PIECES;
+
+    for (int j = 0; j < 64; j++) {
+
+        Piece piece = board->squares[j];
+        int pieceType = GET_TYPE(piece);
+        int pieceColor = GET_COLOR(piece);
+        
+        // Skip empty squares
+        if (piece == EMPTY_SQUARE) {
+            continue;
+        }
+        if (!(black_targets >> j & 1 || white_targets >> j & 1)) {
+            
+            continue;
+        }
+
+        BitBoard targets;
+        if (pieceColor == White) {
+            targets = black_targets;
+        } else {
+            targets = white_targets;
+        }
+        if (pieceType ==Pawn){
+            BitBoard attacks;
+            if (GET_COLOR(piece)==White){
+                attacks = (BitBoardShiftNW(BitBoardSetBit(EMPTY_BOARD, j)) | BitBoardShiftNE(BitBoardSetBit(EMPTY_BOARD, j))) & targets;
+            }else{
+                attacks = (BitBoardShiftSW(BitBoardSetBit(EMPTY_BOARD, j)) | BitBoardShiftSE(BitBoardSetBit(EMPTY_BOARD, j))) & targets;
             }
+            score += BitBoardCountBits(attacks) * pieceScore(pieceType) * (2*pieceColor-1) * ATTACK_FACTOR;
+        }else{
+            
+            score += BitBoardCountBits(LookupTableAttacks(l, j, pieceType, targets)) * pieceScore(pieceType) * (2*pieceColor-1) * ATTACK_FACTOR;
         }
     }
     
@@ -97,8 +119,8 @@ int betterDictScore(ChessBoard *board, Dictionary *dict){
     return 0;
 }
 
-int pieceScore(Piece p) {
-    switch (GET_TYPE(p)) {
+int pieceScore(int pieceType) {
+    switch (pieceType) {
         case Pawn:
             return 1;
         case Knight:
