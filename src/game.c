@@ -50,7 +50,7 @@ int main(int argc  __attribute__((unused)), char **argv __attribute__((unused)))
 static void runGame(ChessBoard *cbinit)
 {
     cb = cbinit;
-    init_dictionary(&dict);
+    //init_dictionary(&dict);
     l = LookupTableNew();
 
     ChessBoard *new = malloc(sizeof(ChessBoard));
