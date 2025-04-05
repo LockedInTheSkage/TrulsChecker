@@ -16,7 +16,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define TIME_LIMIT 100000 // in milliseconds
+#define TIME_LIMIT 10000000 // in milliseconds
 
 static void runGame(ChessBoard *cbinit);
 
@@ -46,7 +46,7 @@ int main(int argc  __attribute__((unused)), char **argv __attribute__((unused)))
     /* ChessBoard cb = ChessBoardNew("4k3/8/8/8/8/1r6/r7/6K1 b - - 0 1", 2); */
 
     
-    //init_dictionary(&dict);
+    init_dictionary(&dict);
     l = LookupTableNew();
     openingBook = OpeningBookNew(l, ChessBoardNew("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", 2));
     OpeningBookGenerate(openingBook, 6);

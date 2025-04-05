@@ -24,6 +24,7 @@ void merge(int *scores, Move *moves, int l, int m, int r);
 
 int minimax(LookupTable l, ChessBoard *oldBoard, Dictionary *dict, int alpha, int beta, bool maximizingPlayer, clock_t startTime, int timeLimit, bool mustFinish) {
 
+    int final_score;
 
     if (((clock() - startTime) * 1000) >= timeLimit*CLOCKS_PER_SEC && !mustFinish) {
         return maximizingPlayer ? INT_MIN : INT_MAX;
@@ -82,7 +83,7 @@ int minimax(LookupTable l, ChessBoard *oldBoard, Dictionary *dict, int alpha, in
                 break; // Alpha-beta pruning
             }
         }
-        return maxEval;
+        final_score = maxEval;
     } else {
         int minEval = INT_MAX;
         for (int i = 0; i < movesSize; i++) {
@@ -106,8 +107,15 @@ int minimax(LookupTable l, ChessBoard *oldBoard, Dictionary *dict, int alpha, in
                 break; // Alpha-beta pruning
             }
         }
-        return minEval;
+        final_score = minEval;
     }
+
+    // update the dictionary with the final score
+    if (dict->zobrist != NULL) {
+        install_board(dict, oldBoard, final_score, oldBoard->depth);
+    }
+
+    return final_score;
 }
 
 Move bestMove(LookupTable l, ChessBoard *boardPtr, Dictionary *dict, int minDepth, int timeLimit, int depth_speed, bool verbose) {
@@ -168,6 +176,11 @@ Move bestMove(LookupTable l, ChessBoard *boardPtr, Dictionary *dict, int minDept
 
     if (bestVal == INT_MIN) {
         bestMove = moves[0];
+    }
+
+    // update the dictionary with the final score
+    if (dict->zobrist != NULL) {
+        install_board(dict, boardPtr, bestVal, depthFrontier);
     }
 
     return bestMove;
