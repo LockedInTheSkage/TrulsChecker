@@ -8,7 +8,7 @@ endif
 # Targets
 .PHONY: all
 
-all: clean game train
+all: clean game train testDictionary
 
 testHeuristic:
 	$(CC) -o testHeuristic src/testHeuristic.c src/BitBoard.c src/LookupTable.c src/ChessBoard.c src/Branch.c src/Heuristic.c -lm -g

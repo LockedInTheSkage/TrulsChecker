@@ -51,8 +51,8 @@ struct nlist *lookup(Dictionary *dict, uint64_t key)
     return NULL; /* not found */
 }
 
-/* install: put (key, score, depth) in hashtab */
-struct nlist *install(Dictionary *dict, uint64_t key, int32_t score, uint8_t depth)
+/* put: put (key, score, depth) in hashtab */
+struct nlist *put(Dictionary *dict, uint64_t key, int32_t score, uint8_t depth)
 {
     struct nlist *np;
     unsigned hashval;
@@ -74,7 +74,7 @@ struct nlist *install(Dictionary *dict, uint64_t key, int32_t score, uint8_t dep
 struct nlist *install_board(Dictionary *dict, ChessBoard *board, int32_t score, uint8_t depth)
 {
     uint64_t key = get_zobrist_hash(board, dict->zobrist);
-    return install(dict, key, score, depth);
+    return put(dict, key, score, depth);
 }
 
 /* lookup_board: look for board in hashtab */
@@ -122,7 +122,7 @@ int load_dictionary(Dictionary *dict)
             fclose(file);
             return -1;
         }
-        install(dict, key, score, depth);
+        put(dict, key, score, depth);
     }
 
     fclose(file);

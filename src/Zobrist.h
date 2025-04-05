@@ -14,6 +14,12 @@ typedef struct
 
 Zobrist_Table *init_zobrist();
 
+int zobrist_file_exists();
+
+void load_zobrist(Zobrist_Table *table);
+
+void save_zobrist(Zobrist_Table *table);
+
 void free_zobrist(Zobrist_Table *table);
 
 uint64_t get_zobrist_hash(ChessBoard *cb, Zobrist_Table *table);

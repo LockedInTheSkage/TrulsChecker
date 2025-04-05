@@ -18,7 +18,7 @@ typedef struct {
 void init_dictionary(Dictionary *dict);
 unsigned hash(uint64_t key);
 nlist *lookup(Dictionary *dict, uint64_t key);
-nlist *install(Dictionary *dict, uint64_t key, int32_t score, uint8_t depth);
+nlist *put(Dictionary *dict, uint64_t key, int32_t score, uint8_t depth);
 nlist *install_board(Dictionary *dict, ChessBoard *board, int32_t score, uint8_t depth);
 nlist *lookup_board(Dictionary *dict, ChessBoard *board);
 int save_dictionary(Dictionary *dict);
