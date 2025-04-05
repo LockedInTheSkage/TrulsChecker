@@ -105,7 +105,7 @@ int heuristic(LookupTable l, ChessBoard *board, Dictionary *dict) {
     
     
     if (dict->zobrist != NULL) {
-        install_board(dict, board, score, board->depth);
+        install_board(dict, board, score, 0);
     }
 
     return score;
