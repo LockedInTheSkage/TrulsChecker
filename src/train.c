@@ -16,7 +16,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define TIME_LIMIT 10000 // in milliseconds
+#define TIME_LIMIT 100000 // in milliseconds
 
 static void runGame(ChessBoard *cbinit);
 
@@ -85,7 +85,7 @@ static void runGame(ChessBoard *cbinit)
         
         ChessBoardPrintBoard(*cb); 
         cb->depth = 2;
-        Move whiteMove = bestMove(l, cb, &dict, -1, TIME_LIMIT, 1, false);
+        Move whiteMove = bestMove(l, cb, &dict, -1, TIME_LIMIT, 1, true);
         
         ChessBoardPlayMove(cb, cb, whiteMove);
 
@@ -106,7 +106,7 @@ static void runGame(ChessBoard *cbinit)
         
         
         cb->depth = 2;
-        Move blackMove = bestMove(l, cb, &dict, -1, TIME_LIMIT, 1, false);
+        Move blackMove = bestMove(l, cb, &dict, -1, TIME_LIMIT, 1, true);
         
         
         printf("Black move: %s\n", moveToString(blackMove));

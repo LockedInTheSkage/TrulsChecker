@@ -69,6 +69,8 @@ int minimax(LookupTable l, ChessBoard *oldBoard, Dictionary *dict, int alpha, in
             ChessBoard newBoard;
             ChessBoardPlayMove(&newBoard, oldBoard, move);
 
+            // Rerun the heuristic if the depth is 0
+            // and the move is a capture
             if (newBoard.depth == 0 && (oldBoard->squares[move.to] != EMPTY_PIECE) ) {
                 newBoard.depth = 1;
             }
@@ -90,6 +92,8 @@ int minimax(LookupTable l, ChessBoard *oldBoard, Dictionary *dict, int alpha, in
             ChessBoard newBoard;
             ChessBoardPlayMove(&newBoard, oldBoard, move);
 
+            // Rerun the heuristic if the depth is 0
+            // and the move is a capture, same as line 71
             if (newBoard.depth == 0 && (oldBoard->squares[move.to] != EMPTY_PIECE) ) {
                 newBoard.depth = 1;
             }

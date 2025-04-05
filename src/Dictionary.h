@@ -3,8 +3,11 @@
 
 #define HASHSIZE 100001
 
+static const char *DICT_FILENAME = "src/data/heuristicDict.dat";
+
 typedef struct nlist {
-    struct nlist *next;
+    struct nlist *left;   // Left child in BST
+    struct nlist *right;  // Right child in BST
     uint64_t key;
     int32_t score;
     uint8_t depth;
