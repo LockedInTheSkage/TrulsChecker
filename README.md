@@ -7,11 +7,11 @@ Chess model built for beating my friend Truls
 ## Usage
 To create the executable file, run the following command:
 ```
-make ./src/game
+make
 ```
 
 
 To run the executable file, run the following command:
 ```
-./src/game
+./game
 ```

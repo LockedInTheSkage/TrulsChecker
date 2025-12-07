@@ -7,7 +7,7 @@
 #define EMPTY_PIECE 12
 #define GET_PIECE(t, c) ((t << 1) | c) // Get the piece given a type and color
 #define GET_TYPE(p) (p >> 1)           // Get the type of a piece
-#define GET_COLOR(p) (p & 1)           // Get the color of a piece
+#define GET_COLOR(p) (p & 1)           // Get the color of a piece, 0 = White, 1 = Black
 
 typedef uint8_t Piece; // 0 = White Pawn, 1 = Black Pawn, 2 = White Knight, 3 = Black Knight, etc.
 

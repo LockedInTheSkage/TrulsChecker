@@ -16,7 +16,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define TIME_LIMIT 10000 // in milliseconds
+#define TIME_LIMIT 8000 // in milliseconds
 
 static void runGame(ChessBoard *cbinit);
 
@@ -50,7 +50,6 @@ int main(int argc  __attribute__((unused)), char **argv __attribute__((unused)))
 static void runGame(ChessBoard *cbinit)
 {
     cb = cbinit;
-    //init_dictionary(&dict);
     l = LookupTableNew();
 
     ChessBoard *new = malloc(sizeof(ChessBoard));

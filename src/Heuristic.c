@@ -26,6 +26,19 @@
 #define BLACK_PIECES (BLACK_PIECE(Pawn) | BLACK_PIECE(Knight) | BLACK_PIECE(Bishop) | BLACK_PIECE(Rook) | BLACK_PIECE(Queen) | BLACK_PIECE(King)) // Bitboard of all their pieces
 
 
+
+/*
+    * heuristic: A heuristic function to evaluate the position of a chess board
+    * 
+    * Parameters:
+    * - l: LookupTable containing precomputed attack patterns
+    * - board: Pointer to the current chess board
+    * - dict: Dictionary for storing and retrieving board positions
+    * 
+    * Returns:
+    * - An integer score representing the evaluation of the position in favor of the black player
+    
+*/
 int heuristic(LookupTable l, ChessBoard *board, Dictionary *dict) {
     int score = 0;
     
@@ -45,20 +58,6 @@ int heuristic(LookupTable l, ChessBoard *board, Dictionary *dict) {
             return dictScore;
         }
     }
-
-    for (int i = 0; i < PIECE_SIZE; i++) {
-
-        if (GET_TYPE(i) == King) {
-            continue;
-        }
-
-        BitBoard pieces = board->pieces[i];
-        int pieceCount = BitBoardCountBits(pieces);
-        
-        score += pieceCount * pieceScore(i) * (2*GET_COLOR(i)-1) * PIECE_FACTOR;
-        
-    }
-    
     
     // Find threats
 
@@ -68,30 +67,31 @@ int heuristic(LookupTable l, ChessBoard *board, Dictionary *dict) {
     for (int j = 0; j < 64; j++) {
 
         Piece piece = board->squares[j];
-        int pieceType = GET_TYPE(piece);
-        int pieceColor = GET_COLOR(piece);
-        
+
         // Skip empty squares
-        if (piece == EMPTY_SQUARE) {
-            continue;
-        }
-        if (!(black_targets >> j & 1 || white_targets >> j & 1)) {
-            
+        if (piece == EMPTY_PIECE) {
             continue;
         }
 
+
+        int pieceType = GET_TYPE(piece);
+        int pieceColor = GET_COLOR(piece);
+        
+
+        score += pieceScore(pieceType) * (2*pieceColor-1) * PIECE_FACTOR;
+
         BitBoard targets;
-        if (pieceColor == White) {
-            targets = black_targets;
-        } else {
+        if (pieceColor) {
             targets = white_targets;
+        } else {
+            targets = black_targets;
         }
         if (pieceType ==Pawn){
             BitBoard attacks;
-            if (GET_COLOR(piece)==White){
-                attacks = (BitBoardShiftNW(BitBoardSetBit(EMPTY_BOARD, j)) | BitBoardShiftNE(BitBoardSetBit(EMPTY_BOARD, j))) & targets;
-            }else{
+            if (GET_COLOR(piece)){
                 attacks = (BitBoardShiftSW(BitBoardSetBit(EMPTY_BOARD, j)) | BitBoardShiftSE(BitBoardSetBit(EMPTY_BOARD, j))) & targets;
+            }else{
+                attacks = (BitBoardShiftNW(BitBoardSetBit(EMPTY_BOARD, j)) | BitBoardShiftNE(BitBoardSetBit(EMPTY_BOARD, j))) & targets;
             }
             score += BitBoardCountBits(attacks) * pieceScore(pieceType) * (2*pieceColor-1) * ATTACK_FACTOR;
         }else{
@@ -110,6 +110,7 @@ int heuristic(LookupTable l, ChessBoard *board, Dictionary *dict) {
 
     return score;
 }
+
 
 int betterDictScore(ChessBoard *board, Dictionary *dict){
     nlist *np = lookup_board(dict, board);
@@ -132,7 +133,7 @@ int pieceScore(int pieceType) {
         case Queen:
             return 9;
         default:
-            return 1;
+            return 0;
     }
 }
 

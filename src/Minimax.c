@@ -17,7 +17,8 @@
 
 int stage = 0;
 
-void sortMoves(Move *moves, int size, ChessBoard *board, LookupTable l, Dictionary *dict);
+// Updated function signature to return scores
+int* sortMoves(Move *moves, int size, ChessBoard *board, LookupTable l, Dictionary *dict);
 void mergeSort(int *scores, Move *moves, int l, int r);
 void merge(int *scores, Move *moves, int l, int m, int r);
 
@@ -37,7 +38,6 @@ int minimax(LookupTable l, ChessBoard *oldBoard, Dictionary *dict, int alpha, in
         }
     }
     
-
     if (oldBoard->depth == 0) {
         return heuristic(l, oldBoard, dict);
     }
@@ -47,10 +47,18 @@ int minimax(LookupTable l, ChessBoard *oldBoard, Dictionary *dict, int alpha, in
     Move moves[MOVES_SIZE];
     int movesSize = BranchExtract(branches, branchesSize, moves);
 
-    sortMoves(moves, movesSize, oldBoard, l, dict);
+    int* scores = NULL;
 
+    // Sort moves and get the heuristic scores
+    if (oldBoard->depth == 1){
+        scores = sortMoves(moves, movesSize, oldBoard, l, dict);
+    }
 
     if (movesSize == 0) {
+        // Free allocated scores array if no moves
+        if (scores != NULL) {
+            free(scores);
+        }
         if (ChessBoardChecking(l, oldBoard) != EMPTY_BOARD) {
             if (oldBoard->turn == Black) {
                 return INT_MIN;
@@ -70,19 +78,25 @@ int minimax(LookupTable l, ChessBoard *oldBoard, Dictionary *dict, int alpha, in
             ChessBoard newBoard;
             ChessBoardPlayMove(&newBoard, oldBoard, move);
 
-            // Rerun the heuristic if the depth is 0
-            // and the move is a capture
-            if (newBoard.depth == 0 && (oldBoard->squares[move.to] != EMPTY_PIECE) ) {
+            int eval;
+            // Rerun the heuristic if the depth is 0 and the move is a capture
+            if (newBoard.depth == 0 && (oldBoard->squares[move.to] != EMPTY_PIECE)) {
                 newBoard.depth = 1;
+                eval = minimax(l, &newBoard, dict, alpha, beta, false, startTime, timeLimit, mustFinish);
+            } else if (newBoard.depth == 0 && scores != NULL) {
+                // Reuse the score we already calculated during sorting, if we have sorted
+                eval = scores[i];
+            } else {
+                eval = minimax(l, &newBoard, dict, alpha, beta, false, startTime, timeLimit, mustFinish);
             }
 
-            int eval = minimax(l, &newBoard, dict, alpha, beta, false, startTime, timeLimit, mustFinish);
             maxEval = (eval > maxEval) ? eval : maxEval;
             alpha = (alpha > eval) ? alpha : eval;
             if (beta <= alpha){
                 break; // Alpha-beta pruning
             }
         }
+        free(scores); // Free allocated memory
         final_score = maxEval;
     } else {
         int minEval = INT_MAX;
@@ -93,13 +107,17 @@ int minimax(LookupTable l, ChessBoard *oldBoard, Dictionary *dict, int alpha, in
             ChessBoard newBoard;
             ChessBoardPlayMove(&newBoard, oldBoard, move);
 
-            // Rerun the heuristic if the depth is 0
-            // and the move is a capture, same as line 71
-            if (newBoard.depth == 0 && (oldBoard->squares[move.to] != EMPTY_PIECE) ) {
+            int eval;
+            // Rerun the heuristic if the depth is 0 and the move is a capture
+            if (newBoard.depth == 0 && (oldBoard->squares[move.to] != EMPTY_PIECE)) {
                 newBoard.depth = 1;
+                eval = minimax(l, &newBoard, dict, alpha, beta, true, startTime, timeLimit, mustFinish);
+            } else if (newBoard.depth == 0 && scores != NULL) {
+                // Reuse the score we already calculated during sorting
+                eval = scores[i];
+            } else {
+                eval = minimax(l, &newBoard, dict, alpha, beta, true, startTime, timeLimit, mustFinish);
             }
-
-            int eval = minimax(l, &newBoard, dict, alpha, beta, true, startTime, timeLimit, mustFinish);
             
             minEval = (eval < minEval) ? eval : minEval;
             beta = (beta < eval) ? beta : eval;
@@ -107,6 +125,7 @@ int minimax(LookupTable l, ChessBoard *oldBoard, Dictionary *dict, int alpha, in
                 break; // Alpha-beta pruning
             }
         }
+        free(scores); // Free allocated memory
         final_score = minEval;
     }
 
@@ -118,6 +137,7 @@ int minimax(LookupTable l, ChessBoard *oldBoard, Dictionary *dict, int alpha, in
     return final_score;
 }
 
+// Update bestMove function to use the scores from sortMoves
 Move bestMove(LookupTable l, ChessBoard *boardPtr, Dictionary *dict, int minDepth, int timeLimit, int depth_speed, bool verbose) {
     clock_t startTime = clock();
     int bestVal = boardPtr->turn == White ? INT_MAX : INT_MIN;
@@ -128,7 +148,7 @@ Move bestMove(LookupTable l, ChessBoard *boardPtr, Dictionary *dict, int minDept
     int branchesSize = BranchFill(l, boardPtr, branches);
     Move moves[MOVES_SIZE];
     int movesSize = BranchExtract(branches, branchesSize, moves);
-    sortMoves(moves, movesSize, boardPtr, l, dict);
+    int* moveScores = sortMoves(moves, movesSize, boardPtr, l, dict);
     
     while (
         (((clock() - startTime) * 1000)) <= timeLimit*CLOCKS_PER_SEC
@@ -144,11 +164,14 @@ Move bestMove(LookupTable l, ChessBoard *boardPtr, Dictionary *dict, int minDept
             ChessBoardPlayMove(&newBoard, boardPtr, move);
             newBoard.depth = depthFrontier;
             
-
-            // Main call of minimax
-            int moveVal = minimax(l, &newBoard, dict, INT_MIN, INT_MAX, newBoard.turn, startTime, timeLimit, depthFrontier <= minDepth);
-
-
+            int moveVal;
+            // If it's the first iteration, we can use the score from the sort
+            if (depthFrontier == boardPtr->depth && newBoard.depth == 0) {
+                moveVal = moveScores[i];
+            } else {
+                // Main call of minimax
+                moveVal = minimax(l, &newBoard, dict, INT_MIN, INT_MAX, newBoard.turn, startTime, timeLimit, depthFrontier <= minDepth);
+            }
 
             if ((moveVal > tempBestVal && newBoard.turn == White) || (moveVal < tempBestVal && newBoard.turn == Black)) {
                 tempBestMove = move;
@@ -156,7 +179,6 @@ Move bestMove(LookupTable l, ChessBoard *boardPtr, Dictionary *dict, int minDept
             }
         }
 
-        
         if ((((clock() - startTime) * 1000)) <= timeLimit*CLOCKS_PER_SEC || depthFrontier <= minDepth) {
             bestMove = tempBestMove;
             bestVal = tempBestVal;
@@ -173,6 +195,8 @@ Move bestMove(LookupTable l, ChessBoard *boardPtr, Dictionary *dict, int minDept
         }
         
     }
+    
+    free(moveScores); // Free allocated memory
 
     if (bestVal == INT_MIN) {
         bestMove = moves[0];
@@ -186,9 +210,9 @@ Move bestMove(LookupTable l, ChessBoard *boardPtr, Dictionary *dict, int minDept
     return bestMove;
 }
 
-
-void sortMoves(Move *moves, int size, ChessBoard *board, LookupTable l, Dictionary *dict) {
-    int scores[size];
+// Modified function to return the scores array
+int* sortMoves(Move *moves, int size, ChessBoard *board, LookupTable l, Dictionary *dict) {
+    int* scores = malloc(size * sizeof(int));
     ChessBoard *newBoard = malloc(sizeof(ChessBoard));
     for (int i = 0; i < size; i++) {
         ChessBoardPlayMove(newBoard, board, moves[i]);
@@ -197,6 +221,7 @@ void sortMoves(Move *moves, int size, ChessBoard *board, LookupTable l, Dictiona
     free(newBoard);
     
     mergeSort(scores, moves, 0, size - 1);
+    return scores;
 }
 
 void mergeSort(int *scores, Move *moves, int l, int r) {
