@@ -2,7 +2,13 @@
 #define ZOBRIST_H
 
 #include <stdint.h>
+#include "templechess/templechess/src/BitBoard.h"
+#include "templechess/templechess/src/LookupTable.h"
+#include "templechess/templechess/src/ChessBoard.h"
 
+// In templechess v2: Pawn, King, Knight, Bishop, Rook, Queen, Empty = 7 types
+// We need 12 pieces: 6 types * 2 colors (excluding Empty)
+#define PIECE_SIZE 12
 
 typedef struct
 {

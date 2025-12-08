@@ -1,8 +1,9 @@
 #ifndef OPENINGBOOK_H
 #define OPENINGBOOK_H
 
-#include "ChessBoard.h"
-#include "LookupTable.h"
+#include "templechess/templechess/src/BitBoard.h"
+#include "templechess/templechess/src/LookupTable.h"
+#include "templechess/templechess/src/ChessBoard.h"
 
 typedef struct {
     ChessBoard *boards;

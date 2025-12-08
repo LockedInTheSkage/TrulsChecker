@@ -1,15 +1,29 @@
-#ifndef MINIMAX_ALPHA_BETA_H
-#define MINIMAX_ALPHA_BETA_H
+#ifndef MINIMAX_H
+#define MINIMAX_H
 
 #include <stdbool.h>
-#include <time.h>
+#include <stdint.h>
+#include "templechess/templechess/src/BitBoard.h"
+#include "templechess/templechess/src/LookupTable.h"
+#include "templechess/templechess/src/ChessBoard.h"
+#include "Dictionary.h"
 
+int minimax(
+    LookupTable l,
+    ChessBoard *board,
+    Dictionary *dict,
+    int alpha,
+    int beta,
+    int depth,
+    bool maximizingPlayer
+);
 
+Move findBestMove(
+    LookupTable l,
+    ChessBoard *board,
+    Dictionary *dict,
+    int depth,
+    bool verbose
+);
 
-// Minimax algorithm with alpha-beta pruning
-int minimax(LookupTable l, ChessBoard *board, Dictionary *dict, int alpha, int beta, bool maximizingPlayer, clock_t startTime, int timeLimit, bool mustFinish);
-
-// Function to find the best move within the given depth and time limits
-Move bestMove(LookupTable l, ChessBoard *board, Dictionary *dict, int minDepth, int timeLimit, int depth_speed, bool verbose);
-
-#endif // MINIMAX_ALPHA_BETA_H
+#endif

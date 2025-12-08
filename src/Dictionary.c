@@ -3,10 +3,9 @@
 #include <string.h>
 #include <stdio.h>
 
-
-#include "BitBoard.h"
-#include "LookupTable.h"
-#include "ChessBoard.h"
+#include "templechess/templechess/src/BitBoard.h"
+#include "templechess/templechess/src/LookupTable.h"
+#include "templechess/templechess/src/ChessBoard.h"
 #include "Zobrist.h"
 #include "Dictionary.h"
 

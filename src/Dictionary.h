@@ -1,6 +1,11 @@
 #ifndef DICTIONARY_H
 #define DICTIONARY_H
 
+#include "templechess/templechess/src/BitBoard.h"
+#include "templechess/templechess/src/LookupTable.h"
+#include "templechess/templechess/src/ChessBoard.h"
+#include "Zobrist.h"
+
 #define HASHSIZE 100001
 
 static const char *DICT_FILENAME = "src/data/heuristicDict.dat";

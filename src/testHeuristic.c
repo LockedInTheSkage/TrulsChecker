@@ -1,81 +1,77 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "BitBoard.h"
-#include "Branch.h" 
-#include "LookupTable.h"
-#include "ChessBoard.h"
+#include <assert.h>
+#include "templechess/templechess/src/BitBoard.h"
+#include "templechess/templechess/src/LookupTable.h"
+#include "templechess/templechess/src/ChessBoard.h"
 #include "Heuristic.h"
 
-// Maximum line length in the .in file
-#define POSITIONS "src/data/heuristicTestPositions.in"
-#define MAX_LINE_LENGTH 512
-
-void trim_newline(char *str) {
-    size_t len = strlen(str);
-    if (len > 0 && (str[len - 1] == '\n' || str[len - 1] == '\r')) {
-        str[len - 1] = '\0';
-    }
+void testStartingPosition() {
+    printf("Testing starting position evaluation...\n");
+    
+    LookupTable l = LookupTableNew();
+    ChessBoard board = ChessBoardNew("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    
+    int score = evaluate(l, &board);
+    printf("Score: %d (should be 0 for equal material)\n", score);
+    assert(score == 0);
+    
+    LookupTableFree(l);
+    printf("PASSED\n\n");
 }
 
-int main(int argc, char *argv[]) {
+void testMaterialAdvantage() {
+    printf("Testing material advantage...\n");
+    
+    LookupTable l = LookupTableNew();
+    // White is up a queen
+    ChessBoard board = ChessBoardNew("rnb1kbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    
+    int score = evaluate(l, &board);
+    printf("Score: %d (should be positive, around 900 for queen advantage)\n", score);
+    assert(score > 800);
+    
+    LookupTableFree(l);
+    printf("PASSED\n\n");
+}
 
-    // Open the input file
-    FILE *file = fopen(POSITIONS, "r");
-    if (!file) {
-        perror("Failed to open input file");
-        return 1;
-    }
+void testBlackAdvantage() {
+    printf("Testing black material advantage...\n");
+    
+    LookupTable l = LookupTableNew();
+    // Black is up a rook
+    ChessBoard board = ChessBoardNew("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/1NBQKBNR w Kkq - 0 1");
+    
+    int score = evaluate(l, &board);
+    printf("Score: %d (should be negative, around -500 for rook disadvantage)\n", score);
+    assert(score < -400);
+    
+    LookupTableFree(l);
+    printf("PASSED\n\n");
+}
 
-    // Initialize a lookup table
-    LookupTable lookup = LookupTableNew();
-    if (!lookup) {
-        fprintf(stderr, "Failed to initialize lookup table.\n");
-        fclose(file);
-        return 1;
-    }
+void testPawnAdvantage() {
+    printf("Testing pawn advantage...\n");
+    
+    LookupTable l = LookupTableNew();
+    // White is up two pawns
+    ChessBoard board = ChessBoardNew("rnbqkbnr/pppppp2/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    
+    int score = evaluate(l, &board);
+    printf("Score: %d (should be around 200 for two pawn advantage)\n", score);
+    assert(score >= 150 && score <= 250);
+    
+    LookupTableFree(l);
+    printf("PASSED\n\n");
+}
 
-    char line[MAX_LINE_LENGTH];
-    int lineNumber = 0;
-    int passed = 0, total = 0;
-
-    // Read each line from the file
-    while (fgets(line, sizeof(line), file)) {
-        lineNumber++;
-        trim_newline(line);
-
-        // Split the line into FEN string and expected score
-        char *fen = strtok(line, ",");
-        char *scoreStr = strtok(NULL, ",");
-        if (!fen || !scoreStr) {
-            fprintf(stderr, "Invalid format on line %d: %s\n", lineNumber, line);
-            continue;
-        }
-
-        int expectedScore = atoi(scoreStr);
-
-        // Create a chessboard from the FEN string
-        ChessBoard board = ChessBoardNew(fen, 0);
-
-        // Compute the heuristic score
-        int computedScore = heuristic(lookup, &board, NULL);
-
-        // Compare with the expected score
-        total++;
-        if (computedScore == expectedScore) {
-            printf("Line %d: PASS (FEN: %s, Score: %d)\n", lineNumber, fen, computedScore);
-            passed++;
-        } else {
-            printf("Line %d: FAIL (FEN: %s, Computed: %d, Expected: %d)\n", lineNumber, fen, computedScore, expectedScore);
-        }
-    }
-
-    // Clean up
-    fclose(file);
-    LookupTableFree(lookup);
-
-    // Print summary
-    printf("\nSummary: %d/%d tests passed.\n", passed, total);
-
+int main() {
+    printf("=== Heuristic Test Suite ===\n\n");
+    
+    testStartingPosition();
+    testMaterialAdvantage();
+    testBlackAdvantage();
+    testPawnAdvantage();
+    
+    printf("All tests passed!\n");
     return 0;
 }

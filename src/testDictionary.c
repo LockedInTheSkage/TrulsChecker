@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "BitBoard.h"
-#include "LookupTable.h"
-#include "ChessBoard.h"
+#include "templechess/templechess/src/BitBoard.h"
+#include "templechess/templechess/src/LookupTable.h"
+#include "templechess/templechess/src/ChessBoard.h"
 #include "Zobrist.h"
 #include "Dictionary.h"
 #include "Heuristic.h"
@@ -47,7 +47,7 @@ void test_dictionary_positions(Dictionary *dict) {
         testCount++;
         printf("\nTest position %d: %s\n", testCount, fen);
         
-        ChessBoard cb = ChessBoardNew(fen, depth);
+        ChessBoard cb = ChessBoardNew(fen);
 
         // Test initial lookup
         nlist *entry = lookup_board(dict, &cb);
@@ -58,8 +58,9 @@ void test_dictionary_positions(Dictionary *dict) {
         }
         
         // Calculate score and insert into dictionary
-        int score = heuristic(LookupTableNew(), &cb, dict);
+        int score = evaluate(LookupTableNew(), &cb);
         printf("Calculated score: %d\n", score);
+        install_board(dict, &cb, score, depth);
 
         // Verify entry was created
         nlist *newEntry = lookup_board(dict, &cb);
@@ -67,7 +68,7 @@ void test_dictionary_positions(Dictionary *dict) {
             printf("New entry created: Score: %d, Depth: %d\n", newEntry->score, newEntry->depth);
             
             // Test overwriting with deeper depth
-            ChessBoard deeperCb = ChessBoardNew(fen, depth + 2);
+            ChessBoard deeperCb = ChessBoardNew(fen);
             install_board(dict, &deeperCb, score * 2, depth + 2);
             nlist *updatedEntry = lookup_board(dict, &deeperCb);
             
@@ -92,9 +93,9 @@ void test_identical_positions(Dictionary *dict) {
     char *startPos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
     
     // Create boards with different depths
-    ChessBoard cb1 = ChessBoardNew(startPos, 1);
-    ChessBoard cb2 = ChessBoardNew(startPos, 3);
-    ChessBoard cb3 = ChessBoardNew(startPos, 5);
+    ChessBoard cb1 = ChessBoardNew(startPos);
+    ChessBoard cb2 = ChessBoardNew(startPos);
+    ChessBoard cb3 = ChessBoardNew(startPos);
     
     // Insert with different scores
     install_board(dict, &cb1, 100, 1);
@@ -143,7 +144,7 @@ void test_dictionary_persistence() {
         
         // Insert test positions
         for (int i = 0; i < 3; i++) {
-            ChessBoard cb = ChessBoardNew(testPositions[i], depths[i]);
+            ChessBoard cb = ChessBoardNew(testPositions[i]);
             install_board(&dict, &cb, scores[i], depths[i]);
             printf("Inserted position %d with score %d at depth %d\n", i, scores[i], depths[i]);
         }
@@ -161,7 +162,7 @@ void test_dictionary_persistence() {
         
         // Verify all positions were restored
         for (int i = 0; i < 3; i++) {
-            ChessBoard cb = ChessBoardNew(testPositions[i], depths[i]);
+            ChessBoard cb = ChessBoardNew(testPositions[i]);
             nlist *entry = lookup_board(&dict, &cb);
             
             char testName[100];
@@ -199,7 +200,7 @@ void test_complete_reset_persistence() {
         Dictionary dict;
         init_dictionary(&dict);
         
-        ChessBoard cb = ChessBoardNew(testPosition, testDepth);
+        ChessBoard cb = ChessBoardNew(testPosition);
         install_board(&dict, &cb, testScore, testDepth);
         printf("Created and saved dictionary with test position\n");
         
@@ -219,7 +220,7 @@ void test_complete_reset_persistence() {
         Dictionary dict;
         init_dictionary(&dict);
         
-        ChessBoard cb = ChessBoardNew(testPosition, testDepth);
+        ChessBoard cb = ChessBoardNew(testPosition);
         nlist *entry = lookup_board(&dict, &cb);
         
         if (entry && entry->score == testScore && entry->depth == testDepth) {
@@ -243,7 +244,7 @@ void test_persistence_within_nlist(Dictionary *dict) {
     
     // Create a dictionary and add some entries
     
-    ChessBoard cb = ChessBoardNew("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", 3);
+    ChessBoard cb = ChessBoardNew("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
     
     // Find the key for the board
     uint64_t key = get_zobrist_hash(&cb, dict->zobrist);

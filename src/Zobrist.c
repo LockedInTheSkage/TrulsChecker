@@ -1,7 +1,6 @@
-
-#include "BitBoard.h"
-#include "LookupTable.h"
-#include "ChessBoard.h"
+#include "templechess/templechess/src/BitBoard.h"
+#include "templechess/templechess/src/LookupTable.h"
+#include "templechess/templechess/src/ChessBoard.h"
 #include "Zobrist.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -119,17 +118,35 @@ void free_zobrist(Zobrist_Table *table)
     free(table);
 }
 
+// Helper function to convert templechess v2 Type and Color to piece index (0-11)
+static inline int get_piece_index(Type type, Color color) {
+    if (type == Empty) return 0; // Use 0 for empty squares, won't be hashed
+    // Pawn=0, King=1, Knight=2, Bishop=3, Rook=4, Queen=5
+    // White pieces: 0-5, Black pieces: 6-11
+    return (type * 2) + color;
+}
+
 uint64_t get_zobrist_hash(ChessBoard *cb, Zobrist_Table *table)
 {
     uint64_t hash = 0;
+    
+    // Hash pieces based on type and color bitboards
     for (int i = 0; i < BOARD_SIZE; i++)
     {
-        hash ^= table->piece_pos_values[i][cb->squares[i]];
+        Type type = cb->squares[i];
+        if (type != Empty) {
+            // Determine color by checking if square is in white or black bitboard
+            Color color = (cb->colors[White] & ((BitBoard)1 << i)) ? White : Black;
+            int piece_idx = get_piece_index(type, color);
+            hash ^= table->piece_pos_values[i][piece_idx];
+        }
     }
+    
     if (cb->enPassant != EMPTY_SQUARE)
     {
         hash ^= table->en_passant_values[cb->enPassant];
     }
+    
     for (int i = 0; i < 4; i++)
     {
         if (cb->castling & (1 << i))
@@ -137,10 +154,12 @@ uint64_t get_zobrist_hash(ChessBoard *cb, Zobrist_Table *table)
             hash ^= table->castling_values[i];
         }
     }
+    
     if (cb->turn == Black)
     {
         hash ^= table->black_to_move_value;
     }
+    
     return hash;
 }
 

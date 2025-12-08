@@ -1,201 +1,149 @@
-#define _XOPEN_SOURCE 700
-#include "BitBoard.h"
-#include "LookupTable.h"
-#include "ChessBoard.h"
-#include "Zobrist.h"
-#include "Dictionary.h"
-#include "Branch.h"
-#include "Minimax.h"
-#include "ChessBoardHelper.h"
-
-
-
-#include <signal.h>
-#include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "templechess/templechess/src/BitBoard.h"
+#include "templechess/templechess/src/LookupTable.h"
+#include "templechess/templechess/src/ChessBoard.h"
+#include "Minimax.h"
+#include "Dictionary.h"
+#include "TemplechessAdapter.h"
 
-#define TIME_LIMIT 8000 // in milliseconds
+#define MAX_INPUT 100
+#define DEFAULT_DEPTH 5
 
-static void runGame(ChessBoard *cbinit);
-
-static int checkGameOver(ChessBoard *cb, LookupTable l);
-
-static int legalMove(char *moveStr, ChessBoard *cb, LookupTable l);
-
-void clean_lookups(int sig);
-
-ChessBoard *cb;
-LookupTable l;
-Dictionary dict;
-
-int main(int argc  __attribute__((unused)), char **argv __attribute__((unused)))
-{
-    struct sigaction sa;
-    sa.sa_handler = clean_lookups;
-    sa.sa_flags = 0;
-    sigemptyset(&sa.sa_mask);
-    sigaction(SIGINT, &sa, NULL);  // Handle Ctrl+C
-    sigaction(SIGTERM, &sa, NULL); // Handle termination
-    sigaction(SIGQUIT, &sa, NULL); // Handle quit
-    sigaction(SIGTSTP, &sa, NULL); // Handle Ctrl+Z
-
-
-    ChessBoard cb = ChessBoardNew("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", 2); //  
-    runGame(&cb);   
+void printHelp() {
+    printf("\nCommands:\n");
+    printf("  move <e2e4>  - Make a move in algebraic notation\n");
+    printf("  ai           - Let AI make a move\n");
+    printf("  undo         - Undo last move (not implemented)\n");
+    printf("  fen          - Show FEN string\n");
+    printf("  board        - Display the board\n");
+    printf("  quit         - Exit the game\n");
+    printf("  help         - Show this help\n\n");
 }
 
-
-static void runGame(ChessBoard *cbinit)
-{
-    cb = cbinit;
-    l = LookupTableNew();
-
-    ChessBoard *new = malloc(sizeof(ChessBoard));
-
-
-    if (cb->turn == Black){
-        cb->depth = 2;
-        Move aiMove = bestMove(l, cb, &dict, -1, TIME_LIMIT, 2, true);
-        
-        
-        printf("AI move: %s\n", moveToString(aiMove));
-        ChessBoardPlayMove(new, cb, aiMove);
-        memcpy(cb, new, sizeof(ChessBoard));
-
-        int gameState= checkGameOver(cb, l);
-        if (gameState == 1) {
-            ChessBoardPrintBoard(*cb); // Print the board
-            printf("You lose!\n");
-            LookupTableFree(l);
-
-        } else if (gameState == 2) {
-            ChessBoardPrintBoard(*cb); // Print the board
-            printf("Stalemate!\n");
-            LookupTableFree(l);
+int main(int argc, char **argv) {
+    printf("=== TrulsChecker Chess AI ===\n");
+    printf("Using templechess v2 library\n\n");
+    
+    // Initialize lookup table
+    LookupTable l = LookupTableNew();
+    
+    // Initialize dictionary
+    Dictionary dict;
+    init_dictionary(&dict);
+    
+    // Initialize board
+    char *startFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    ChessBoard board = ChessBoardNew(startFen);
+    
+    // Game settings
+    int searchDepth = DEFAULT_DEPTH;
+    if (argc > 1) {
+        searchDepth = atoi(argv[1]);
+        if (searchDepth < 1 || searchDepth > 10) {
+            printf("Invalid depth, using default: %d\n", DEFAULT_DEPTH);
+            searchDepth = DEFAULT_DEPTH;
         }
     }
     
-    while (1)
-    {   
+    printf("Search depth: %d\n", searchDepth);
+    printHelp();
+    
+    // Display initial board
+    ChessBoardPrintBoard(board);
+    
+    // Game loop
+    char input[MAX_INPUT];
+    while (1) {
+        printf("\n%s to move> ", board.turn == White ? "White" : "Black");
         
-        ChessBoardPrintBoard(*cb); // Print the board
-        char moveStr[5] = {0};
-        printf("Enter a move: ");
-        if (scanf("%4s", moveStr) != 1) {
-            fprintf(stderr, "Error reading input\n");
-            return;
+        if (fgets(input, MAX_INPUT, stdin) == NULL) {
+            break;
         }
-        while(legalMove(moveStr, cb, l)==0){
-            if(moveStr=="exit"){
+        
+        // Remove newline
+        input[strcspn(input, "\n")] = 0;
+        
+        // Parse command
+        if (strcmp(input, "quit") == 0 || strcmp(input, "q") == 0) {
+            break;
+        } else if (strcmp(input, "help") == 0 || strcmp(input, "h") == 0) {
+            printHelp();
+        } else if (strcmp(input, "board") == 0 || strcmp(input, "b") == 0) {
+            ChessBoardPrintBoard(board);
+        } else if (strcmp(input, "fen") == 0) {
+            char *fen = ChessBoardToFEN(&board);
+            printf("FEN: %s\n", fen);
+        } else if (strcmp(input, "ai") == 0 || strcmp(input, "a") == 0) {
+            printf("AI thinking...\n");
+            Move bestMove = findBestMove(l, &board, &dict, searchDepth, false);
+            
+            if (bestMove.from.type == Empty) {
+                printf("No legal moves available!\n");
+                if (isCheckmate(l, &board)) {
+                    printf("Checkmate! %s wins!\n", board.turn == White ? "Black" : "White");
+                } else {
+                    printf("Stalemate!\n");
+                }
                 break;
             }
-            printf("Invalid move. Enter a move (4 characters): ");
-            if (scanf("%4s", moveStr) != 1) {
-                fprintf(stderr, "Error reading input\n");
-                return;
+            
+            printf("AI plays: %s\n", moveToString(bestMove));
+            ChessBoardPlayMove(&board, bestMove);
+            ChessBoardPrintBoard(board);
+            
+            // Check for game end
+            if (ChessBoardCount(l, &board) == 0) {
+                if (isCheckmate(l, &board)) {
+                    printf("Checkmate! %s wins!\n", board.turn == White ? "Black" : "White");
+                } else {
+                    printf("Stalemate!\n");
+                }
+                break;
             }
+            
+            if (isInsufficientMaterial(&board)) {
+                printf("Draw by insufficient material!\n");
+                break;
+            }
+        } else if (strncmp(input, "move ", 5) == 0 || strncmp(input, "m ", 2) == 0) {
+            char *moveStr = strchr(input, ' ') + 1;
+            Move move = parseMove(moveStr, &board, l);
+            
+            if (move.from.type == Empty) {
+                printf("Invalid or illegal move: %s\n", moveStr);
+                continue;
+            }
+            
+            ChessBoardPlayMove(&board, move);
+            ChessBoardPrintBoard(board);
+            
+            // Check for game end
+            if (ChessBoardCount(l, &board) == 0) {
+                if (isCheckmate(l, &board)) {
+                    printf("Checkmate! %s wins!\n", board.turn == White ? "Black" : "White");
+                } else {
+                    printf("Stalemate!\n");
+                }
+                break;
+            }
+            
+            if (isInsufficientMaterial(&board)) {
+                printf("Draw by insufficient material!\n");
+                break;
+            }
+        } else {
+            printf("Unknown command: %s (type 'help' for commands)\n", input);
         }
-        if (strcmp(moveStr, "exit") == 0) {
-            ChessBoardPrintMovelist(*cb);
-            break;
-        }
-
-        
-
-        Move playerMove = parseMove(moveStr, cb);
-        ChessBoardPlayMove(new, cb, playerMove);
-        memcpy(cb, new, sizeof(ChessBoard));
-        printf("Player move: %s\n", moveStr);
-        ChessBoardPrintBoard(*cb); // Print the board
-        int gameState= checkGameOver(cb, l);
-        printf("Game state: %d\n", gameState);
-        if (gameState == 1) {
-            printf("You win!\n");
-            break;
-        } else if (gameState == 2) {
-            printf("Stalemate!\n");
-            break;
-        }
-
-        
-        
-        
-        cb->depth = 2;
-        Move aiMove = bestMove(l, cb, &dict, 2, TIME_LIMIT, 2, true);
-        
-        
-        printf("AI move: %s\n", moveToString(aiMove));
-        ChessBoardPlayMove(new, cb, aiMove);
-        memcpy(cb, new, sizeof(ChessBoard));
-
-        gameState= checkGameOver(cb, l);
-        if (gameState == 1) {
-            ChessBoardPrintBoard(*cb); // Print the board
-            printf("You lose!\n");
-            break;
-        } else if (gameState == 2) {
-            ChessBoardPrintBoard(*cb); // Print the board
-            printf("Stalemate!\n");
-            break;
-        }
-        
-
     }
     
-    clean_lookups(0);
+    // Cleanup
+    printf("\nSaving dictionary...\n");
+    save_dictionary(&dict);
+    exit_dictionary(&dict);
+    LookupTableFree(l);
     
-}
-
-
-int checkGameOver(ChessBoard *cb, LookupTable l){
-  Branch branches[BRANCHES_SIZE];
-  int branchesSize = BranchFill(l, cb, branches);
-  Move moves[MOVES_SIZE];
-  int movesSize = BranchExtract(branches, branchesSize, moves);
-
-  if(movesSize == 0){
-    BitBoard checking = ChessBoardChecking(l, cb);
-    if (checking != EMPTY_BOARD){
-      return 1;
-    } else {
-      return 2;
-    }
-  } else{
+    printf("Thanks for playing!\n");
     return 0;
-  }
-}
-
-int legalMove(char *moveStr, ChessBoard *cb, LookupTable l){
-    if (strcmp(moveStr, "exit") == 0) {
-        return 1;
-    }
-    if (strlen(moveStr) != 4) {
-        return 0;
-    }
-    Move move = parseMove(moveStr, cb);
-
-    Branch branches[BRANCHES_SIZE];
-    int branchesSize = BranchFill(l, cb, branches);
-    Move moves[MOVES_SIZE];
-    int movesSize = BranchExtract(branches, branchesSize, moves);
-    for (int i = 0; i < movesSize; i++) {
-        if (moves[i].from == move.from && moves[i].to == move.to) {
-            return 1;
-        }
-    }
-    return 0;
-}
-
-void clean_lookups(int sig) {
-    printf("\nGame over\n");
-    
-    if(dict.zobrist != NULL){
-        exit_dictionary(&dict);
-    }
-    if (l != NULL){
-        LookupTableFree(l);
-    }
-    exit(0);
 }

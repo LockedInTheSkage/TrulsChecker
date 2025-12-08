@@ -1,18 +1,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "BitBoard.h"
-#include "LookupTable.h"
-#include "ChessBoard.h"
-#include "Branch.h"
-
-typedef struct {
-    ChessBoard *boards;
-    int count;
-    int index;
-    int capacity;
-    LookupTable l;
-} OpeningBook;
+#include "templechess/templechess/src/BitBoard.h"
+#include "templechess/templechess/src/LookupTable.h"
+#include "templechess/templechess/src/ChessBoard.h"
+#include "templechess/templechess/src/MoveSet.h"
+#include "OpeningBook.h"
 
 static void expandBook(OpeningBook *book) {
     if (book->count >= book->capacity) {
@@ -36,15 +29,16 @@ OpeningBook *OpeningBookNew(LookupTable l, ChessBoard start) {
 // Performs a simple BFS over random moves to generate new boards
 void OpeningBookGenerate(OpeningBook *book, int maxDepth) {
     for (int i = 0; i < book->count && maxDepth > 0; i++) {
-        Branch branches[BRANCHES_SIZE];
-        int sz = BranchFill(book->l, &book->boards[i], branches);
-        Move moves[MOVES_SIZE];
-        int movesSize = BranchExtract(branches, sz, moves);
+        MoveSet ms = MoveSetNew();
+        MoveSetFill(book->l, &book->boards[i], &ms);
+        int movesSize = MoveSetCount(&ms);
+        
         for (int m = 0; m < movesSize; m++) {
-            ChessBoard newBoard;
-            ChessBoardPlayMove(&newBoard, &book->boards[i], moves[m]);
+            Move move = MoveSetPop(&ms);
+            ChessBoard newBoard = book->boards[i];
+            ChessBoardPlayMove(&newBoard, move);
             expandBook(book);
-            memcpy(&book->boards[book->count++], &newBoard, sizeof(ChessBoard));
+            book->boards[book->count++] = newBoard;
         }
         maxDepth--;
     }

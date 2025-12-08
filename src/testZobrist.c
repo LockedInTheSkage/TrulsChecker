@@ -1,10 +1,9 @@
-#include "BitBoard.h"
-#include "LookupTable.h"
-#include "ChessBoard.h"
+#include "templechess/templechess/src/BitBoard.h"
+#include "templechess/templechess/src/LookupTable.h"
+#include "templechess/templechess/src/ChessBoard.h"
 #include "Zobrist.h"
 #include <stdio.h>
 #include <stdlib.h>
-
 #include <string.h>
 
 void test_zobrist_from_file(const char *filename);
@@ -31,7 +30,7 @@ void test_zobrist_from_file(const char *filename) {
         // Remove newline character
         line[strcspn(line, "\n")] = 0;
 
-        cb = ChessBoardNew(line, 2); 
+        cb = ChessBoardNew(line); 
         uint64_t hash = get_zobrist_hash(&cb, zobrist_table);
         printf("Position: %s\nHash: %lu\n", line, hash);
     }

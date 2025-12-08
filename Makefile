@@ -5,29 +5,41 @@ else
     $(error Compiler not found! Please install gcc)
 endif
 
+# Compiler flags
+CFLAGS := -Wall -g -Isrc
+LDFLAGS := -lm
+
+# Templechess v2 source files
+TEMPLECHESS_DIR := src/templechess/templechess/src
+TEMPLECHESS_SRC := $(TEMPLECHESS_DIR)/BitBoard.c \
+                   $(TEMPLECHESS_DIR)/LookupTable.c \
+                   $(TEMPLECHESS_DIR)/ChessBoard.c \
+                   $(TEMPLECHESS_DIR)/MoveSet.c
+
+# Project source files
+CORE_SRC := src/Zobrist.c src/Dictionary.c src/Heuristic.c
+
 # Targets
-.PHONY: all
+.PHONY: all clean
 
-all: clean game train testDictionary
+all: game testHeuristic testMinimax testDictionary testZobrist
 
-testHeuristic:
-	$(CC) -o testHeuristic src/testHeuristic.c src/BitBoard.c src/LookupTable.c src/ChessBoard.c src/Branch.c src/Heuristic.c -lm -g
+game: src/game.c src/Minimax.c src/TemplechessAdapter.c $(CORE_SRC) $(TEMPLECHESS_SRC)
+	$(CC) $(CFLAGS) -o game $^ $(LDFLAGS)
 
-testZobrist:
-	$(CC) -o testZobrist src/testZobrist.c src/Zobrist.c src/BitBoard.c src/LookupTable.c src/ChessBoard.c src/Branch.c -lm -g
+testHeuristic: src/testHeuristic.c src/Heuristic.c $(TEMPLECHESS_SRC)
+	$(CC) $(CFLAGS) -o testHeuristic $^ $(LDFLAGS)
 
-testDictionary:
-	$(CC) -o testDictionary src/testDictionary.c src/Zobrist.c src/Dictionary.c src/BitBoard.c src/LookupTable.c src/ChessBoard.c src/Heuristic.c -lm -g
+testMinimax: src/testMinimax.c src/Minimax.c src/Heuristic.c src/TemplechessAdapter.c $(CORE_SRC) $(TEMPLECHESS_SRC)
+	$(CC) $(CFLAGS) -o testMinimax $^ $(LDFLAGS)
 
-train:
-	$(CC) -o train src/train.c src/Zobrist.c src/BitBoard.c src/LookupTable.c src/ChessBoard.c src/Dictionary.c src/Branch.c src/OpeningBook.c src/Minimax.c src/Heuristic.c src/ChessBoardHelper.c -lm -g
+testDictionary: src/testDictionary.c $(CORE_SRC) $(TEMPLECHESS_SRC)
+	$(CC) $(CFLAGS) -o testDictionary $^ $(LDFLAGS)
 
-game:
-	$(CC) -o game src/game.c src/Zobrist.c src/BitBoard.c src/LookupTable.c src/ChessBoard.c src/Dictionary.c src/Branch.c src/Minimax.c src/Heuristic.c src/ChessBoardHelper.c -lm -g
-
-chess_program:
-	$(CC) -o chess_program src/main.c src/Zobrist.c src/BitBoard.c src/LookupTable.c src/ChessBoard.c src/Dictionary.c src/Branch.c src/Minimax.c src/Heuristic.c src/ChessBoardHelper.c -lm -g
-
+testZobrist: src/testZobrist.c src/Zobrist.c $(TEMPLECHESS_SRC)
+	$(CC) $(CFLAGS) -o testZobrist $^ $(LDFLAGS)
 
 clean:
-	@rm -f game train testDictionary testZobrist testHeuristic *.gcda *.gcno
+	@rm -f game testHeuristic testMinimax testDictionary testZobrist
+	@rm -f *.gcda *.gcno
+	@echo "Cleaned build artifacts"
