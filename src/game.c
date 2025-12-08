@@ -7,6 +7,7 @@
 #include "Minimax.h"
 #include "Dictionary.h"
 #include "TemplechessAdapter.h"
+#include "NeuralHeuristic.h"
 
 #define MAX_INPUT 100
 #define DEFAULT_DEPTH 5
@@ -25,6 +26,13 @@ void printHelp() {
 int main(int argc, char **argv) {
     printf("=== TrulsChecker Chess AI ===\n");
     printf("Using templechess v2 library\n\n");
+    
+    // Initialize neural network evaluator
+    if (neural_init() == 0) {
+        printf("Neural network evaluation enabled\n");
+    } else {
+        printf("Using material-based evaluation (neural network not available)\n");
+    }
     
     // Initialize lookup table
     LookupTable l = LookupTableNew();
@@ -142,6 +150,7 @@ int main(int argc, char **argv) {
     printf("\nSaving dictionary...\n");
     save_dictionary(&dict);
     exit_dictionary(&dict);
+    neural_shutdown();
     LookupTableFree(l);
     
     printf("Thanks for playing!\n");

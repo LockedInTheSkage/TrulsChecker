@@ -1,0 +1,9 @@
+{
+  "model_type": "chess_eval",
+  "input_dim": 776,
+  "hyperparameters": {
+    "hidden_dims": [512, 256, 128],
+    "dropout": 0.2
+  },
+  "description": "Chess position evaluation network"
+}

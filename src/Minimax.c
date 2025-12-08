@@ -22,7 +22,7 @@ int minimax(
     }
     
     if (depth == 0) {
-        return evaluate(l, board);
+        return evaluate_position(l, board);
     }
     
     MoveSet ms = MoveSetNew();

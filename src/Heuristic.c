@@ -1,4 +1,5 @@
 #include "Heuristic.h"
+#include "NeuralHeuristic.h"
 #include <stdio.h>
 
 // Piece values in centipawns
@@ -46,4 +47,14 @@ int evaluate(LookupTable l, ChessBoard *board) {
     // - Development
     
     return score;
+}
+
+/**
+ * Main evaluation function - uses neural network if available
+ */
+int evaluate_position(LookupTable l, ChessBoard *board) {
+    if (neural_is_available()) {
+        return neural_evaluate(l, board);
+    }
+    return evaluate(l, board);
 }

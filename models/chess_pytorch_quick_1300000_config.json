@@ -1,0 +1,20 @@
+{
+  "name": "chess_eval_pytorch",
+  "model_type": "pytorch",
+  "task_type": "regression",
+  "representation": "binary",
+  "random_seed": 42,
+  "hyperparameters": {
+    "hidden_dims": [
+      512,
+      256,
+      128
+    ],
+    "dropout": 0.1,
+    "learning_rate": 0.001,
+    "batch_size": 1024,
+    "epochs": 100,
+    "device": "cuda"
+  },
+  "models_dir": "models"
+}
