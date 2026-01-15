@@ -16,7 +16,6 @@ void printHelp() {
     printf("\nCommands:\n");
     printf("  move <e2e4>  - Make a move in algebraic notation\n");
     printf("  ai           - Let AI make a move\n");
-    printf("  undo         - Undo last move (not implemented)\n");
     printf("  fen          - Show FEN string\n");
     printf("  board        - Display the board\n");
     printf("  quit         - Exit the game\n");
@@ -24,7 +23,7 @@ void printHelp() {
 }
 
 int main(int argc, char **argv) {
-    printf("=== TrulsChecker Chess AI ===\n");
+    printf("TTT TrulsChecker Chess AI TTT\n");
     printf("Using templechess v2 library\n\n");
     
     // Initialize neural network evaluator

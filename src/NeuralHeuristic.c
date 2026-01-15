@@ -11,18 +11,16 @@ static OrtEnv* ort_env = NULL;
 static OrtSession* ort_session = NULL;
 static OrtMemoryInfo* ort_memory_info = NULL;
 static int neural_available = 0;
+const char* model_path = "models/chess_model.onnx";
 
-// Piece type to index mapping for binary representation
-// Order must match Python converter: P, N, B, R, Q, K for white (0-5), black (6-11)
-// templechess Type enum: Pawn=0, King=1, Knight=2, Bishop=3, Rook=4, Queen=5
 static const int PIECE_INDEX[7][2] = {
-    {0, 6},   // Pawn: White=0, Black=6
-    {5, 11},  // King: White=5, Black=11
-    {1, 7},   // Knight: White=1, Black=7
-    {2, 8},   // Bishop: White=2, Black=8
-    {3, 9},   // Rook: White=3, Black=9
-    {4, 10},  // Queen: White=4, Black=10
-    {-1, -1}  // Empty
+    {0, 6},  
+    {5, 11}, 
+    {1, 7},  
+    {2, 8},  
+    {3, 9},  
+    {4, 10}, 
+    {-1, -1} 
 };
 
 /**
@@ -31,10 +29,7 @@ static const int PIECE_INDEX[7][2] = {
  * Metadata: [0]=side_to_move, [1-4]=castling, [5-6]=en_passant, [7]=halfmove
  */
 static void board_to_binary(ChessBoard *board, float *output) {
-    // Initialize to zeros
     memset(output, 0, 776 * sizeof(float));
-    
-    // Fill piece planes (first 768 values)
     for (int square = 0; square < BOARD_SIZE; square++) {
         Type type = board->squares[square];
         
@@ -119,7 +114,7 @@ int neural_init(void) {
     }
     
     // Create session from ONNX model file
-    const char* model_path = "models/chess_model.onnx";
+    
     status = ort_api->CreateSession(ort_env, model_path, session_options, &ort_session);
     ort_api->ReleaseSessionOptions(session_options);
     

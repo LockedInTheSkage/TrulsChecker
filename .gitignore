@@ -1,2 +1,4 @@
 heuristicDict.dat
 src/data/heuristicDict.dat
+onnxruntime-linux*
+.vscode
